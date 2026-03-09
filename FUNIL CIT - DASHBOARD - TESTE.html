@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funil de Vendas · FIRJAN SENAI SESI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3f2f1;--surface:#fff;--border:#e1dfdd;--text:#252423;--muted:#605e5c;
+  --faint:#a19f9d;--blue:#0078d4;--green:#107c10;--yellow:#ffb900;--red:#a80000;
+  --purple:#8764b8;--teal:#00b294;--orange:#ff8c00;
+  --blue-bg:#eff6fc;--green-bg:#dff6dd;--yellow-bg:#fff4ce;--red-bg:#fde7e9;
+}
+body{background:var(--bg);font-family:"Segoe UI",system-ui,sans-serif;font-size:13px;color:var(--text)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#c8c6c4;border-radius:3px}
+.topbar{background:#1e1a78;height:46px;display:flex;align-items:center;padding:0 16px;gap:10px;position:sticky;top:0;z-index:200}
+.topbar-logo{display:flex;align-items:center;gap:8px;color:#fff;font-size:14px;font-weight:700}
+.topbar-logo svg{width:22px;height:22px}
+.topbar-divider{width:1px;height:20px;background:rgba(255,255,255,0.2)}
+.topbar-title{color:#c8c6c4;font-size:12px}
+.topbar-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.topbar-btn{background:rgba(255,255,255,0.12);border:none;color:#fff;padding:4px 12px;border-radius:2px;font-size:12px;cursor:pointer;transition:background 0.15s}
+.topbar-btn:hover{background:rgba(255,255,255,0.22)}
+.topbar-btn.primary{background:#f2c811;color:#1e1a78;font-weight:700}
+.topbar-btn.primary:hover{background:#e6bc0a}
+.topbar-btn.upload{background:#00b294;color:#fff;font-weight:700}
+.topbar-btn.upload:hover{background:#009a80}
+.navtabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;position:sticky;top:46px;z-index:100}
+.navtab{padding:11px 16px;font-size:12px;cursor:pointer;border-bottom:3px solid transparent;color:var(--muted);transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.navtab:hover{color:var(--text);background:var(--bg)}
+.navtab.active{border-bottom-color:var(--blue);color:var(--blue);font-weight:600}
+.tab-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:0.6}
+.filterbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:88px;z-index:90}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-label{font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap}
+.filter-select{border:1px solid var(--border);border-radius:2px;padding:4px 8px;font-size:12px;color:var(--text);background:var(--bg);outline:none;cursor:pointer;min-width:90px}
+.filter-select:focus{border-color:var(--blue)}
+.filter-input{border:1px solid var(--border);border-radius:2px;padding:4px 10px;font-size:12px;color:var(--text);background:var(--bg);outline:none;width:200px}
+.filter-input:focus{border-color:var(--blue)}
+.filter-clear{border:1px solid var(--red);background:var(--red-bg);color:var(--red);padding:4px 10px;border-radius:2px;font-size:11px;cursor:pointer;font-weight:600}
+.filter-count{margin-left:auto;background:var(--blue-bg);color:var(--blue);padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;white-space:nowrap}
+.canvas{padding:14px 16px;min-height:calc(100vh - 140px)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:2px;transition:border-color 0.15s}
+.card:hover{border-color:#b3d7f5}
+.card-header{padding:12px 14px 8px;border-bottom:1px solid #f3f2f1}
+.card-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px}
+.card-body{padding:12px 14px}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi:hover{border-color:var(--blue)}
+.kpi-accent{position:absolute;bottom:0;left:0;right:0;height:3px}
+.kpi-label{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px}
+.kpi-value{font-size:24px;font-weight:700;line-height:1;margin-bottom:3px}
+.kpi-sub{font-size:10px;color:var(--faint)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.grid-3{display:grid;grid-template-columns:2fr 1.2fr 1fr;gap:10px;margin-bottom:10px}
+.funnel-wrap{display:flex;flex-direction:column;gap:3px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{width:90px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
+.funnel-track{flex:1;height:32px;background:#f3f2f1;border-radius:2px;overflow:hidden;cursor:pointer}
+.funnel-fill{height:100%;border-radius:2px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.funnel-num{font-size:20px;font-weight:800;width:36px;flex-shrink:0}
+.funnel-val{font-size:10px;color:var(--faint);width:80px;text-align:right;flex-shrink:0}
+.bar-chart{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:flex;align-items:center;gap:8px}
+.bar-lbl{font-size:11px;color:var(--muted);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-lbl.right{width:110px;text-align:right}
+.bar-track{flex:1;height:14px;background:#f3f2f1;border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px}
+.bar-val{font-size:10px;color:var(--muted);width:72px;text-align:right;flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:5px}
+.legend-row{display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 4px;border-radius:2px}
+.legend-row:hover{background:var(--bg)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.legend-name{flex:1;color:var(--text)}
+.legend-count{font-weight:700}
+.data-table{width:100%;border-collapse:collapse;font-size:11px}
+.data-table thead th{background:#f3f2f1;padding:7px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0}
+.data-table thead th:hover{background:#ebebea;color:var(--text)}
+.data-table tbody tr{border-bottom:1px solid #f3f2f1;cursor:pointer;transition:background 0.1s}
+.data-table tbody tr:hover td{background:#eff6fc}
+.data-table td{padding:7px 10px;border-bottom:1px solid #f3f2f1;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl-wrap{overflow:auto;border-radius:2px;border:1px solid var(--border)}
+.badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700;white-space:nowrap}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:14px;transition:all 0.15s;cursor:pointer}
+.team-card:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(0,120,212,0.1)}
+.team-name{font-weight:700;font-size:13px;margin-bottom:2px}
+.team-stats{display:flex;gap:12px;margin-bottom:8px}
+.team-stat{text-align:center}
+.team-stat-num{font-size:18px;font-weight:800;line-height:1}
+.team-stat-lbl{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:0.5px}
+.workload-bar{height:6px;background:#f3f2f1;border-radius:3px;overflow:hidden;margin-top:6px}
+.workload-fill{height:100%;border-radius:3px}
+.team-projects{font-size:10px;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:3px}
+.team-proj-tag{background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:2px;font-size:9px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal{background:#fff;border-radius:4px;padding:24px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--faint)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field.full{grid-column:1/-1}
+.form-label{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:0.6px}
+.form-input,.form-select,.form-textarea{border:1px solid var(--border);border-radius:2px;padding:7px 10px;font-size:12px;color:var(--text);outline:none;font-family:inherit;background:#fff}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,120,212,0.15)}
+.form-textarea{resize:vertical;min-height:60px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:14px;border-top:1px solid var(--border)}
+.btn{padding:8px 20px;border-radius:2px;font-size:12px;cursor:pointer;font-weight:600;border:none;transition:all 0.15s}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#006cbe}
+.btn-secondary{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.btn-secondary:hover{background:#ebebea}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+
+/* Upload screen */
+.upload-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 140px);gap:24px;padding:40px}
+.upload-box{background:var(--surface);border:2px dashed var(--border);border-radius:8px;padding:60px 80px;text-align:center;transition:all 0.2s;cursor:pointer;max-width:600px;width:100%}
+.upload-box:hover,.upload-box.drag{border-color:var(--blue);background:#f0f7ff}
+.upload-icon{font-size:56px;margin-bottom:16px}
+.upload-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px}
+.upload-sub{font-size:13px;color:var(--faint);line-height:1.6}
+.upload-btn{background:var(--blue);color:#fff;border:none;padding:10px 28px;border-radius:4px;font-size:14px;font-weight:700;cursor:pointer;margin-top:20px}
+.upload-btn:hover{background:#006cbe}
+.upload-hint{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.upload-hint-item{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 20px;font-size:12px;color:var(--muted);text-align:center}
+.upload-hint-item strong{display:block;color:var(--text);font-size:13px;margin-bottom:2px}
+
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .grid-3{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+  .team-grid{grid-template-columns:1fr}
+}
+
+/* ── CACHE BANNER ── */
+.cache-banner{background:linear-gradient(135deg,#1e1a78,#0078d4);color:#fff;border-radius:8px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;max-width:660px;width:100%;box-shadow:0 4px 20px rgba(0,120,212,0.25)}
+.cache-banner-left{display:flex;align-items:center;gap:14px}
+.cache-banner-icon{font-size:38px}
+.cache-banner-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.cache-banner-sub{font-size:12px;opacity:0.8}
+.cache-btn-load{background:#f2c811;color:#1e1a78;border:none;padding:10px 24px;border-radius:4px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap}
+.cache-btn-load:hover{background:#e6bc0a}
+.cache-btn-discard{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:4px;font-size:11px;cursor:pointer;margin-top:6px;display:block;width:100%;text-align:center}
+.cache-btn-discard:hover{background:rgba(255,255,255,0.25)}
+/* ── GANTT ── */
+.gantt-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:2px;background:var(--surface)}
+.gantt-header{display:flex;background:#f3f2f1;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.gantt-label-col{width:260px;flex-shrink:0;padding:8px 12px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border)}
+.gantt-months{display:flex;flex:1;min-width:0}
+.gantt-month{flex:1;min-width:40px;text-align:center;padding:8px 2px;font-size:9px;font-weight:700;color:var(--muted);border-right:1px solid #f0f0f0;text-transform:uppercase}
+.gantt-month.today-col{background:#eff6fc;color:var(--blue)}
+.gantt-row{display:flex;border-bottom:1px solid #f3f2f1;min-height:36px;align-items:stretch}
+.gantt-row:hover .gantt-info,.gantt-row:hover .gantt-timeline{background:#fafaf8}
+.gantt-row.group-hdr{background:#f3f2f1;min-height:26px;align-items:center}
+.gantt-info{width:260px;flex-shrink:0;padding:6px 12px;border-right:1px solid var(--border);display:flex;align-items:center;overflow:hidden}
+.gantt-info-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-info-sub{font-size:9px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.gantt-timeline{flex:1;position:relative;min-height:36px;overflow:hidden}
+.gantt-bar{position:absolute;top:8px;height:20px;border-radius:3px;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;cursor:default;transition:filter 0.15s;z-index:2}
+.gantt-bar:hover{filter:brightness(1.12);z-index:3}
+.gantt-today-line{position:absolute;top:0;bottom:0;width:2px;background:#0078d4;opacity:0.6;z-index:4;pointer-events:none}
+.gantt-grid-line{position:absolute;top:0;bottom:0;width:1px;background:#f0f0f0;pointer-events:none}
+/* ── INSTRUCTIONS ── */
+.instr-page{max-width:860px;margin:0 auto;padding-bottom:40px}
+.instr-hero{background:linear-gradient(135deg,#1e1a78 0%,#0078d4 100%);border-radius:8px;padding:36px 40px;color:#fff;margin-bottom:20px}
+.instr-hero h1{font-size:22px;font-weight:800;margin-bottom:8px}
+.instr-hero p{opacity:0.85;font-size:13px;line-height:1.6}
+.instr-section{background:var(--surface);border:1px solid var(--border);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.instr-sec-hdr{background:#f7f7f7;padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.instr-sec-hdr:hover{background:#efefef}
+.instr-sec-icon{font-size:18px}
+.instr-sec-title{font-size:13px;font-weight:700}
+.instr-sec-chev{margin-left:auto;font-size:11px;transition:transform 0.2s}
+.instr-body{padding:20px;display:none}
+.instr-body.open{display:block}
+.instr-step{display:flex;gap:14px;margin-bottom:16px}
+.instr-num{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px}
+.instr-step-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.instr-step-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.itag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;margin:1px 2px;background:var(--blue-bg);color:var(--blue)}
+.itag.g{background:var(--green-bg);color:var(--green)}
+.itag.o{background:#fff0e0;color:var(--orange)}
+.itag.r{background:var(--red-bg);color:var(--red)}
+.itag.p{background:#f0eafa;color:var(--purple)}
+.instr-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.instr-tbl th{background:#f3f2f1;padding:7px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.instr-tbl td{padding:8px 12px;border-bottom:1px solid #f7f7f7;vertical-align:top}
+.instr-tbl tr:last-child td{border-bottom:none}
+
+
+/* ── TREND / IMPROVEMENTS ── */
+.kpi-trend{font-size:10px;font-weight:700;margin-top:3px}
+.kpi-trend.up{color:#107c10}.kpi-trend.down{color:#a80000}.kpi-trend.neutral{color:#605e5c}
+.meta-bar-wrap{margin-top:6px;height:6px;background:#f3f2f1;border-radius:3px;overflow:hidden}
+.meta-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#107c10,#56b956);transition:width 0.6s}
+.alert-card{border-left:3px solid var(--red);background:var(--red-bg)}
+.alert-card.warning{border-left-color:var(--orange);background:#fff0e0}
+.alert-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(0,0,0,0.05);font-size:11px}
+.alert-row:last-child{border-bottom:none}
+.alert-icon{font-size:14px;flex-shrink:0}
+.heatmap-grid{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;margin-top:6px}
+.heatmap-cell{width:100%;aspect-ratio:1;border-radius:2px;cursor:pointer;transition:opacity 0.1s}
+.heatmap-cell:hover{opacity:0.75}
+.risk-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.risk-verde{background:#dff6dd;color:#107c10}
+.risk-amarelo{background:#fff4ce;color:#7d6200}
+.risk-vermelho{background:#fde7e9;color:#a80000}
+.pipeline-weighted{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:4px}
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo" style="font-size:15px;font-weight:900;color:#ffffff;letter-spacing:0.5px">
+    FIRJAN SENAI SESI
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-title">Inteligência Tecnológica</div>
+  <div class="topbar-right" id="topbar-right">
+    <label class="topbar-btn upload" style="cursor:pointer">
+      📂 Carregar Excel
+      <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+    </label>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="navtabs" id="navtabs" style="display:none">
+  <div class="navtab active" onclick="setTab('instrucoes')" id="tab-instrucoes"><span class="tab-dot"></span>ℹ️ Instruções</div>
+  <div class="navtab" onclick="setTab('dashboard')" id="tab-dashboard"><span class="tab-dot"></span>Visão Geral</div>
+  <div class="navtab" onclick="setTab('funnel')" id="tab-funnel"><span class="tab-dot"></span>Funil de Vendas</div>
+  <div class="navtab" onclick="setTab('proposals')" id="tab-proposals"><span class="tab-dot"></span>Propostas</div>
+  <div class="navtab" onclick="setTab('projetos')" id="tab-projetos"><span class="tab-dot"></span>Projetos</div>
+  <div class="navtab" onclick="setTab('cronograma')" id="tab-cronograma"><span class="tab-dot"></span>Cronograma</div>
+  <div class="navtab" onclick="setTab('team')" id="tab-team"><span class="tab-dot"></span>Equipe</div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filterbar" id="filterbar" style="display:none">
+  <div class="filter-group">
+    <span class="filter-label">Busca</span>
+    <input class="filter-input" id="f-search" placeholder="🔍 Projeto, cliente, responsável..." oninput="applyFilters()">
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Coord.</span>
+    <select class="filter-select" id="f-coord" onchange="applyFilters()">
+      <option value="">Todas</option>
+      <option>CIT</option><option>CPQ</option><option>CBT</option><option>CIF</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Status</span>
+    <select class="filter-select" id="f-status" onchange="applyFilters()">
+      <option value="">Todos</option>
+      <option>Previsto</option><option>Em elaboração</option><option>Enviado</option>
+      <option>Aceito</option><option>Negociação</option><option>Contratado</option><option>Recusado</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Tipo</span>
+    <select class="filter-select" id="f-type" onchange="applyFilters()">
+      <option value="">Todos</option>
+      <option>Projeto</option><option>Serviço</option><option>Com fomento</option><option>Sem fomento</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Ano</span>
+    <select class="filter-select" id="f-year" onchange="applyFilters()"><option value="">Todos</option></select>
+  </div>
+  <button class="filter-clear" onclick="clearFilters()">✕ Limpar</button>
+  <div class="filter-count" id="f-count">0 propostas</div>
+</div>
+
+<!-- PAGES -->
+<div id="page-upload" class="canvas">
+  <div class="upload-screen">
+
+    <!-- Cache banner (shown if saved data exists) -->
+    <div id="cache-banner" style="display:none">
+      <div class="cache-banner">
+        <div class="cache-banner-left">
+          <div class="cache-banner-icon">💾</div>
+          <div>
+            <div class="cache-banner-title">Dados da última sessão disponíveis</div>
+            <div class="cache-banner-sub" id="cache-banner-sub">Carregados anteriormente</div>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <button class="cache-btn-load" onclick="loadCacheAndGo()">▶ Continuar última sessão</button>
+          <button class="cache-btn-discard" onclick="discardCache()">✕ Descartar e carregar novo arquivo</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin:14px 0 4px;color:var(--faint);font-size:12px;max-width:660px;width:100%">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span>ou</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+    </div>
+
+    <div class="upload-box" id="drop-zone"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <div class="upload-icon">📊</div>
+      <div class="upload-title">Carregue sua base de dados</div>
+      <div class="upload-sub">
+        Arraste o arquivo Excel aqui ou clique para selecionar.<br>
+        O arquivo deve conter as abas <strong>Funil_Vendas</strong> e/ou <strong>Funil_Projetos</strong>.
+      </div>
+      <label class="upload-btn" style="display:inline-block">
+        Selecionar arquivo .xlsx
+        <input type="file" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+      </label>
+    </div>
+    <div class="upload-hint">
+      <div class="upload-hint-item"><strong>Funil_Vendas</strong>Propostas e pipeline</div>
+      <div class="upload-hint-item"><strong>Funil_Projetos</strong>Projetos em execução</div>
+      <div class="upload-hint-item"><strong>Equipe_CIT</strong>Lista de membros da equipe</div>
+    </div>
+    <button class="topbar-btn" style="background:#1e1a78;color:#fff;padding:8px 20px;border-radius:4px;font-size:13px"
+      onclick="downloadTemplate()">⬇ Baixar Template Excel</button>
+  </div>
+</div>
+<div id="page-dashboard" class="canvas" style="display:none"></div>
+<div id="page-funnel"    class="canvas" style="display:none"></div>
+<div id="page-proposals" class="canvas" style="display:none"></div>
+<div id="page-projetos"  class="canvas" style="display:none"></div>
+<div id="page-cronograma" class="canvas" style="display:none"></div>
+<div id="page-team"      class="canvas" style="display:none"></div>
+<div id="page-instrucoes" class="canvas" style="display:none"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">Nova Proposta</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-grid" id="modal-form"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="modal-delete-btn" style="display:none;margin-right:auto" onclick="deleteProposal()">🗑 Excluir</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProposal()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECT MODAL -->
+<div id="proj-modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeProjectModal()">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-title">
+      <span id="proj-modal-title">Novo Projeto</span>
+      <button onclick="closeProjectModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">×</button>
+    </div>
+    <div id="proj-modal-form" class="form-grid"></div>
+    <div class="modal-actions">
+      <button id="proj-modal-delete-btn" onclick="deleteProject()" class="btn btn-danger" style="display:none;margin-right:auto">🗑 Excluir</button>
+      <button onclick="closeProjectModal()" class="btn">Cancelar</button>
+      <button onclick="saveProject()" class="btn btn-primary">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ───────────────────────────────────────────────────────────────────
+let PROPOSALS = [];
+let PROJECTS  = [];
+let filtered  = [];
+let currentTab = 'upload';
+let sortField = 'budget', sortDir = -1;
+let editingId = null;
+let teamSelectedName = null;
+
+// ── CONSTANTS ───────────────────────────────────────────────────────────────
+const SC = {
+  "Contratado":"#107c10","Enviado":"#0078d4","Em elaboração":"#ffb900",
+  "Aceito":"#8764b8","Previsto":"#00b294","Recusado":"#a80000","Negociação":"#ff8c00"
+};
+const CC = {"CIT":"#0078d4","CPQ":"#ff8c00","CBT":"#107c10","CIF":"#8764b8"};
+
+// Team lists are derived dynamically from loaded data — no hardcoded names
+let CIN_TEAM  = []; // populated from Equipe_CIT sheet (or all responsibles as fallback)
+let TEAM_LIST = [];
+let EQUIPE_CIT_LOADED = false; // true when Equipe_CIT sheet was found
+
+function rebuildTeamLists() {
+  // If Equipe_CIT sheet was loaded, CIN_TEAM is already set — just build TEAM_LIST from data
+  if(!EQUIPE_CIT_LOADED) {
+    // Fallback: derive team from all responsibles in the data
+    const names = new Set();
+    PROPOSALS.forEach(p => {
+      if(p.responsible) names.add(p.responsible.trim());
+      if(p.focalPoint)  names.add(p.focalPoint.trim());
+    });
+    PROJECTS.forEach(p => {
+      if(p.responsible) names.add(p.responsible.trim());
+      if(p.leader)      names.add(p.leader.trim());
+      if(p.analyst)     names.add(p.analyst.trim());
+    });
+    names.delete('');
+    CIN_TEAM = [...names].sort();
+  }
+  // TEAM_LIST is always all names from data (for autocomplete in modals)
+  const allNames = new Set();
+  PROPOSALS.forEach(p => {
+    if(p.responsible) allNames.add(p.responsible.trim());
+    if(p.focalPoint)  allNames.add(p.focalPoint.trim());
+  });
+  PROJECTS.forEach(p => {
+    if(p.responsible) allNames.add(p.responsible.trim());
+    if(p.leader)      allNames.add(p.leader.trim());
+    if(p.analyst)     allNames.add(p.analyst.trim());
+  });
+  allNames.delete('');
+  TEAM_LIST = [...allNames].sort();
+}
+
+const STAGES = [
+  {name:'Prospecção',  icon:'🔍', color:'#00b294', statuses:['Previsto','Em elaboração']},
+  {name:'Enviado',     icon:'📤', color:'#0078d4', statuses:['Enviado']},
+  {name:'Negociação',  icon:'🤝', color:'#ff8c00', statuses:['Aceito','Negociação']},
+  {name:'Contratado',  icon:'✅', color:'#107c10', statuses:['Contratado']},
+  {name:'Recusado',    icon:'❌', color:'#a80000', statuses:['Recusado']},
+];
+
+// ── EXCEL UPLOAD ─────────────────────────────────────────────────────────────
+function handleFile(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  readExcel(file);
+}
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  const file = event.dataTransfer.files[0];
+  if(file) readExcel(file);
+}
+
+function readExcel(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary',cellDates:true});
+      let loadedV = false, loadedP = false;
+
+      // Try Funil_Vendas sheet
+      const vendas = wb.SheetNames.find(n => n.toLowerCase().replace(/[\s_-]/g,'').includes('funivendas') ||
+        n.toLowerCase().includes('vend') || n.toLowerCase().includes('proposta'));
+      if(vendas) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[vendas], {defval:''});
+        if(rows.length) {
+          PROPOSALS = parseVendas(rows);
+          loadedV = true;
+        }
+      }
+
+      // Try Funil_Projetos sheet
+      const proj = wb.SheetNames.find(n => n.toLowerCase().replace(/[\s_-]/g,'').includes('funilprojeto') ||
+        n.toLowerCase().includes('projeto'));
+      if(proj) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[proj], {defval:''});
+        if(rows.length) {
+          PROJECTS = parseProjetos(rows);
+          loadedP = true;
+        }
+      }
+
+      // Try Equipe_CIT sheet
+      const equipe = wb.SheetNames.find(n => n.toLowerCase().replace(/[\s_-]/g,'').includes('equipecit') ||
+        n.toLowerCase().includes('equipe') || n.toLowerCase().includes('team'));
+      if(equipe) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[equipe], {defval:''});
+        if(rows.length) {
+          // Accept any column: nome, name, responsavel, pessoa, membro
+          const keys = Object.keys(rows[0]||{});
+          const nameCol = keys.find(k => ['nome','name','responsavel','pessoa','membro','colaborador']
+            .some(p => k.toLowerCase().includes(p))) || keys[0];
+          const members = rows.map(r => (r[nameCol]||'').toString().trim()).filter(Boolean);
+          if(members.length) {
+            CIN_TEAM = members;
+            EQUIPE_CIT_LOADED = true;
+          }
+        }
+      }
+
+      if(!loadedV && !loadedP) {
+        alert('Nenhuma aba reconhecida. O arquivo deve ter "Funil_Vendas" e/ou "Funil_Projetos".\n\nAbas encontradas: ' + wb.SheetNames.join(', '));
+        return;
+      }
+
+      // Populate year filter
+      const years = [...new Set(PROPOSALS.map(p=>p.sentDate).filter(Boolean).map(d=>d.slice(0,4)))].sort().reverse();
+      const fy = document.getElementById('f-year');
+      fy.innerHTML = '<option value="">Todos</option>' + years.map(y=>`<option>${y}</option>`).join('');
+
+      rebuildTeamLists();
+      saveToCache();
+      activateDashboard();
+
+    } catch(err) {
+      alert('Erro ao ler arquivo: ' + err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function norm(v) { return (v||'').toString().trim(); }
+function numVal(v) { const n=parseFloat((v||'').toString().replace(',','.')); return isNaN(n)?0:n; }
+function dateVal(v) {
+  if(!v) return '';
+  if(v instanceof Date) return v.toISOString().slice(0,7);
+  const s = v.toString().trim();
+  if(/^\d{4}-\d{2}/.test(s)) return s.slice(0,7);
+  if(/^\d{2}\/\d{2}\/\d{4}/.test(s)) { const p=s.split('/'); return `${p[2]}-${p[1]}`; }
+  return s.slice(0,7);
+}
+
+function parseVendas(rows) {
+  // Auto-detect column names (handles variations)
+  const colMap = {};
+  const sample = rows[0] || {};
+  const keys = Object.keys(sample);
+  const find = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p.toLowerCase()))) || '';
+
+  colMap.coord      = find(['coordena','coord']);
+  colMap.resp       = find(['responsável','responsavel','respons']);
+  colMap.fp         = find(['ponto','focal','fp']);
+  colMap.code       = find(['codinome','codename','código','codigo','code']);
+  colMap.client     = find(['cliente','client']);
+  colMap.type       = find(['tipo','type']);
+  colMap.status     = find(['status']);
+  colMap.doc        = find(['documento','document','doc']);
+  colMap.budget     = find(['orçamento total','orcamento total','budget total','orç. total']);
+  colMap.budgetCIN  = find(['orçamento cin','orcamento cin','budget cin','orç. cin']);
+  colMap.months     = find(['prazo','meses','months']);
+  colMap.fin        = find(['financiamento','financ']);
+  colMap.sentDate   = find(['data envio','data de envio','sent','envio']);
+  colMap.prob       = find(['probabilidade','prob']);
+  colMap.detail     = find(['detalhamento','detalhe','detail','descri']);
+
+  return rows.filter(r=>norm(r[colMap.client])||norm(r[colMap.code])).map((r,i)=>({
+    id: i+1,
+    coordination: norm(r[colMap.coord]) || 'CIT',
+    responsible:  norm(r[colMap.resp]),
+    focalPoint:   norm(r[colMap.fp]),
+    codename:     norm(r[colMap.code]),
+    client:       norm(r[colMap.client]),
+    type:         norm(r[colMap.type]),
+    status:       norm(r[colMap.status]),
+    document:     norm(r[colMap.doc]),
+    budget:       numVal(r[colMap.budget]),
+    budgetCIN:    numVal(r[colMap.budgetCIN]),
+    months:       numVal(r[colMap.months]),
+    financing:    norm(r[colMap.fin]),
+    sentDate:     dateVal(r[colMap.sentDate]),
+    probability:  norm(r[colMap.prob]),
+    detail:       norm(r[colMap.detail]),
+  }));
+}
+
+function parseProjetos(rows) {
+  const keys = Object.keys(rows[0] || {});
+  const find = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p.toLowerCase()))) || '';
+  const cm = {
+    coord:    find(['coordena','coord']),
+    client:   find(['cliente','client']),
+    codename: find(['codinome','codename','código']),
+    lead:     find(['líder','lider','lead']),
+    analyst:  find(['analista','analyst']),
+    resp:     find(['responsável na coordenação','responsavel na coordenacao','responsável','responsavel']),
+    line:     find(['linha','pesquisa','research']),
+    type:     find(['tipo','type']),
+    fin:      find(['financiamento','financ']),
+    signDate: find(['assinatura','sign','contrato']),
+    months:   find(['vigência','vigencia','meses','months']),
+    status:   find(['status']),
+    budget:   find(['orçamento atualizado','orcamento atualizado','budget','orçamento']),
+    revenue:  find(['receita financeira','receita externa','revenue']),
+    compet:   find(['competência','competencia','acumulad']),
+    risco:    find(['risco','semaforo','semáforo','risk']),
+    riscoNota:find(['nota_risco','notas_risco','obs_risco','risco_nota','risco_obs']),
+  };
+  return rows.filter(r=>norm(r[cm.client])||norm(r[cm.codename])).map((r,i)=>({
+    id: i+1,
+    coordination: norm(r[cm.coord]),
+    client:       norm(r[cm.client]),
+    codename:     norm(r[cm.codename]),
+    leader:       norm(r[cm.lead]),
+    analyst:      norm(r[cm.analyst]),
+    responsible:  norm(r[cm.resp]),
+    researchLine: norm(r[cm.line]),
+    type:         norm(r[cm.type]),
+    financing:    norm(r[cm.fin]),
+    signDate:     dateVal(r[cm.signDate]),
+    contractMonths: numVal(r[cm.months]),
+    status:       norm(r[cm.status]),
+    budget:       numVal(r[cm.budget]),
+    externalRevenue: numVal(r[cm.revenue]),
+    accumulatedCompetence: numVal(r[cm.compet]),
+    risco:        norm(r[cm.risco])||'',
+    riscoNota:    norm(r[cm.riscoNota])||'',
+  }));
+}
+
+// ── TEMPLATE DOWNLOAD ────────────────────────────────────────────────────────
+function downloadTemplate() {
+  // Build minimal XLSX template in-browser using SheetJS
+  const wb = XLSX.utils.book_new();
+
+  const v_headers = ["coordenacao","responsavel","ponto_focal","codinome","cliente","tipo","status",
+    "documento","orcamento_total","orcamento_cin","prazo_meses","financiamento","data_envio","probabilidade","detalhamento"];
+  const v_labels  = ["Coordenação","Responsável","Ponto Focal","Codinome","Cliente","Tipo","Status",
+    "Documento","Orçamento Total (R$)","Orçamento CIT (R$)","Prazo (meses)","Financiamento","Data Envio (AAAA-MM)","Probabilidade","Detalhamento"];
+  const v_sample  = ["CIT","Responsável Exemplo","Ponto Focal Exemplo","Projeto Exemplo","Cliente ABC",
+    "Projeto","Enviado","Proposta técnica",500000,250000,24,"Contratação direta","2025-03","Alto","Descrição aqui"];
+
+  const wsV = XLSX.utils.aoa_to_sheet([v_labels, v_sample]);
+  wsV['!cols'] = v_labels.map(l => ({wch: Math.max(l.length+4, 16)}));
+  XLSX.utils.book_append_sheet(wb, wsV, "Funil_Vendas");
+
+  const p_labels = ["coordenacao","cliente","codinome","lider_tecnico","analista","responsavel",
+    "linha_pesquisa","tipo","financiamento","data_assinatura","vigencia_meses","status",
+    "orcamento","receita_externa","competencia_acumulada"];
+  const p_labels_display = ["Coordenação","Cliente","Codinome do Projeto","Líder Técnico","Analista",
+    "Responsável na Coordenação","Linha de Pesquisa","Tipo","Financiamento","Data de Assinatura",
+    "Vigência (meses)","Status","Orçamento Atualizado (R$)","Receita Financeira Externa (R$)","Competência Acumulada (R$)"];
+  const p_sample = ["CIT","Cliente Exemplo","Projeto Exemplo","Líder Técnico","Analista","Responsável",
+    "EC - Energia e CCUS","Projeto","ANP","2024-01-15",36,"Execução",829687.15,829687.15,400000];
+
+  const wsP = XLSX.utils.aoa_to_sheet([p_labels_display, p_sample]);
+  wsP['!cols'] = p_labels_display.map(l => ({wch: Math.max(l.length+4, 16)}));
+  XLSX.utils.book_append_sheet(wb, wsP, "Funil_Projetos");
+
+  const leg = [
+    ["CAMPO","VALORES ACEITOS"],
+    ["coordenacao","CIT | CPQ | CBT | CIF"],
+    ["status (Vendas)","Previsto | Em elaboração | Enviado | Aceito | Negociação | Contratado | Recusado"],
+    ["status (Projetos)","Inicialização | Contratação | Execução | Finalização | Encerrado | Cancelado"],
+    ["tipo","Projeto | Serviço | Com fomento | Sem fomento"],
+    ["financiamento","Contratação direta | EMBRAPII - CG | EMBRAPII - BFA | EMBRAPII - Outros | ANP | ANP/EMBRAPII | Edital SENAI | Outros editais | ANEEL | BFA"],
+    ["probabilidade","Baixo | Médio | Alto"],
+    ["documento","Ideia conceitual | Proposta técnica | Cronograma e orçamento | Proposta comercial"],
+    ["data_envio","Formato AAAA-MM  ex: 2025-03"],
+    ["orcamento_total","Número sem R$ ou separadores  ex: 500000"],
+  ];
+  const wsL = XLSX.utils.aoa_to_sheet(leg);
+  wsL['!cols'] = [{wch:22},{wch:80}];
+  XLSX.utils.book_append_sheet(wb, wsL, "Legenda");
+
+  // Sheet: Equipe_CIT
+  const eq_labels = [["nome"]];
+  const eq_sample = [
+    ["Nome Completo 1"],["Nome Completo 2"],["Nome Completo 3"],
+    ["Nome Completo 4"],["Nome Completo 5"],
+  ];
+  const wsE = XLSX.utils.aoa_to_sheet([...eq_labels, ...eq_sample]);
+  wsE['!cols'] = [{wch: 30}];
+  XLSX.utils.book_append_sheet(wb, wsE, "Equipe_CIT");
+
+  XLSX.writeFile(wb, "template_funil_cin.xlsx");
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmt(v) {
+  if(!v||isNaN(v)) return 'R$0';
+  if(v>=1e6) return 'R$'+(v/1e6).toFixed(1)+'M';
+  if(v>=1e3) return 'R$'+(v/1e3).toFixed(0)+'k';
+  return 'R$'+Math.round(v);
+}
+function esc(s) {
+  return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function badge(coord) {
+  const color=CC[coord]||'#605e5c';
+  return `<span style="background:${color}22;color:${color};border:1px solid ${color}44;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700">${esc(coord)}</span>`;
+}
+function badgeStatus(s) {
+  const c=SC[s]||'#605e5c';
+  return `<span style="background:${c}18;color:${c};padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700">${esc(s)}</span>`;
+}
+
+// ── ROUTING ──────────────────────────────────────────────────────────────────
+function setTab(tab) {
+  document.querySelectorAll('.navtab').forEach(t=>t.classList.remove('active'));
+  const btn = document.getElementById('tab-'+tab);
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.canvas').forEach(p=>p.style.display='none');
+  document.getElementById('page-'+tab).style.display='block';
+  currentTab = tab;
+  // hide filterbar for instrucoes tab
+  const fb = document.getElementById('filterbar');
+  if(fb) fb.style.display = (tab==='instrucoes') ? 'none' : 'flex';
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  if(currentTab==='dashboard')  renderDashboard();
+  else if(currentTab==='funnel')     renderFunnel();
+  else if(currentTab==='proposals')  renderProposals();
+  else if(currentTab==='projetos')   renderProjetos();
+  else if(currentTab==='team')       renderTeam();
+  else if(currentTab==='cronograma')  renderCronograma();
+  else if(currentTab==='instrucoes')  renderInstrucoes();
+}
+
+// ── FILTERS ──────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const search = (document.getElementById('f-search')||{value:''}).value.toLowerCase();
+  const coord  = (document.getElementById('f-coord')||{value:''}).value;
+  const status = (document.getElementById('f-status')||{value:''}).value;
+  const type   = (document.getElementById('f-type')||{value:''}).value;
+  const year   = (document.getElementById('f-year')||{value:''}).value;
+
+  filtered = PROPOSALS.filter(p=>{
+    if(coord  && p.coordination!==coord)  return false;
+    if(status && p.status!==status)       return false;
+    if(type   && p.type!==type)           return false;
+    if(year   && !p.sentDate.startsWith(year)) return false;
+    if(search) {
+      const hay = [p.codename,p.client,p.responsible,p.focalPoint,p.financing].join(' ').toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const fc = document.getElementById('f-count');
+  if(fc) fc.textContent = `${filtered.length} de ${PROPOSALS.length} propostas`;
+  renderCurrentTab();
+}
+
+function clearFilters() {
+  ['f-search','f-coord','f-status','f-type','f-year'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  applyFilters();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const el = document.getElementById('page-dashboard');
+  if(!PROPOSALS.length) { el.innerHTML = emptyState('Carregue um Excel para ver o dashboard'); return; }
+
+  const contracted = filtered.filter(p=>p.status==='Contratado');
+  const pipeline   = filtered.filter(p=>['Enviado','Aceito','Negociação'].includes(p.status));
+  const sent       = filtered.filter(p=>p.status!=='Previsto'&&p.status!=='Em elaboração');
+  const cRev = contracted.reduce((s,p)=>s+p.budget,0);
+  const pVal = pipeline.reduce((s,p)=>s+p.budget,0);
+  const conv = sent.length ? Math.round(contracted.length/sent.length*100) : 0;
+  const avg  = contracted.length ? Math.round(cRev/contracted.length) : 0;
+
+  // Weighted pipeline (Baixo×20%, Médio×50%, Alto×80%, sem prob×40%)
+  const probW={'Baixo':0.2,'Médio':0.5,'Alto':0.8};
+  const pWeighted = pipeline.reduce((s,p)=>s+p.budget*(probW[p.probability]??0.4),0);
+
+
+  // Alerts: proposals sent >45 days with no update
+  const now = new Date();
+  const staleAlerts = PROPOSALS.filter(p=>{
+    if(!['Enviado','Aceito','Negociação'].includes(p.status)) return false;
+    if(!p.sentDate||p.sentDate.length<7) return false;
+    const sent = new Date(p.sentDate+'-01');
+    const days = Math.round((now-sent)/(1000*60*60*24));
+    return days>45;
+  }).map(p=>{
+    const days=Math.round((now-new Date(p.sentDate+'-01'))/(1000*60*60*24));
+    return {...p,daysStale:days};
+  }).sort((a,b)=>b.daysStale-a.daysStale).slice(0,5);
+
+  // Trend: compare current vs previous period (last 6m vs 6m before that)
+  const monthsAgo = n => { const d=new Date(); d.setMonth(d.getMonth()-n); return d.toISOString().slice(0,7); };
+  const curr6m = PROPOSALS.filter(p=>p.sentDate>=monthsAgo(6)&&p.status==='Contratado');
+  const prev6m = PROPOSALS.filter(p=>p.sentDate>=monthsAgo(12)&&p.sentDate<monthsAgo(6)&&p.status==='Contratado');
+  const curr6mRev = curr6m.reduce((s,p)=>s+p.budget,0);
+  const prev6mRev = prev6m.reduce((s,p)=>s+p.budget,0);
+  const trendPct = prev6mRev>0 ? Math.round((curr6mRev-prev6mRev)/prev6mRev*100) : null;
+  const trendUp = trendPct!==null&&trendPct>=0;
+
+  const byStatus={}, byCoord={}, byType={}, byFin={}, monthly={};
+  filtered.forEach(p=>{
+    byStatus[p.status]=(byStatus[p.status]||0)+1;
+    if(!byCoord[p.coordination]) byCoord[p.coordination]={contracted:0,pipeline:0};
+    if(p.status==='Contratado') byCoord[p.coordination].contracted+=p.budget;
+    else if(['Enviado','Aceito','Em elaboração'].includes(p.status)) byCoord[p.coordination].pipeline+=p.budget;
+    byType[p.type]=(byType[p.type]||0)+1;
+    if(p.status==='Contratado'&&p.financing) byFin[p.financing]=(byFin[p.financing]||0)+p.budget;
+    if(p.sentDate&&p.sentDate.length>=7){ const ym=p.sentDate.slice(0,7); monthly[ym]=(monthly[ym]||0)+1; }
+  });
+  const finSorted = Object.entries(byFin).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const monthlySorted = Object.entries(monthly).sort().slice(-15);
+  const topC = [...contracted].sort((a,b)=>b.budget-a.budget).slice(0,6);
+  const typeColors={'Projeto':'#0078d4','Serviço':'#107c10','Com fomento':'#8764b8','Sem fomento':'#ff8c00'};
+
+  el.innerHTML = `
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    ${[
+      {l:"Receita Contratada", v:fmt(cRev), s:contracted.length+" contratos",
+       trend: trendPct!==null?`<div class="kpi-trend ${trendUp?'up':'down'}">${trendUp?'▲':'▼'} ${Math.abs(trendPct)}% vs 6m anteriores</div>`:'',
+       c:"var(--green)"},
+      {l:"Pipeline Ponderado",  v:fmt(pWeighted), s:"ajustado por probabilidade",
+       trend:`<div class="kpi-trend neutral">Pipeline bruto: ${fmt(pVal)}</div>`, c:"var(--blue)"},
+      {l:"Taxa de Conversão",   v:conv+"%", s:"enviadas → contratadas",
+       trend:`<div class="kpi-trend ${conv>=30?'up':'down'}">${conv>=30?'▲ Boa taxa':'▼ Abaixo de 30%'}</div>`, c:"var(--purple)"},
+      {l:"Ticket Médio",        v:fmt(avg), s:"contratos fechados",
+       trend:'', c:"var(--yellow)"},
+      {l:"Total Filtrado",      v:filtered.length, s:"de "+PROPOSALS.length+" propostas",
+       trend: staleAlerts.length>0?`<div class="kpi-trend down">⚠️ ${staleAlerts.length} prop. sem resposta</div>`:'', c:"var(--muted)"},
+    ].map(k=>`<div class="kpi">
+      <div class="kpi-label">${k.l}</div>
+      <div class="kpi-value" style="color:${k.c}">${k.v}</div>
+      <div class="kpi-sub">${k.s}</div>
+      ${k.trend||''}${k.extra||''}
+      <div class="kpi-accent" style="background:${k.c}"></div>
+    </div>`).join('')}
+  </div>
+
+
+  <!-- Alerts -->
+  ${staleAlerts.length>0 ? `<div class="card alert-card warning" style="margin-bottom:10px">
+    <div class="card-header"><div class="card-title" style="color:var(--orange)">⚠️ Propostas Aguardando Resposta (+45 dias)</div></div>
+    <div>${staleAlerts.map(p=>`<div class="alert-row" onclick="openModal(${p.id})" style="cursor:pointer">
+      <div class="alert-icon">📋</div>
+      <div style="flex:1"><strong>${esc(p.codename)}</strong> · ${esc(p.client)}</div>
+      <div>${badge(p.coordination)}</div>
+      <div style="color:var(--orange);font-weight:700;font-size:11px">${p.daysStale}d sem resposta</div>
+      <div style="color:var(--faint);font-size:10px">${p.sentDate}</div>
+    </div>`).join('')}
+    </div>
+  </div>` : ''}
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Orçamento por Coordenação</div></div>
+      <div class="card-body">
+        ${Object.entries(byCoord).map(([coord,v])=>{
+          const max=Math.max(...Object.values(byCoord).map(c=>c.contracted+c.pipeline),1);
+          const tot=v.contracted+v.pipeline;
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:12px;font-weight:700;color:${CC[coord]||'#0078d4'}">${coord}</span>
+              <span style="font-size:11px;color:var(--faint)">${fmt(tot)}</span>
+            </div>
+            <div style="height:20px;background:#f3f2f1;border-radius:2px;display:flex;overflow:hidden">
+              <div style="width:${tot?v.contracted/max*100:0}%;background:#107c10" title="Contratado: ${fmt(v.contracted)}"></div>
+              <div style="width:${tot?v.pipeline/max*100:0}%;background:#0078d4;opacity:0.6" title="Pipeline: ${fmt(v.pipeline)}"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:2px;font-size:9px">
+              <span style="color:#107c10">■ ${fmt(v.contracted)}</span>
+              <span style="color:#0078d4">■ ${fmt(v.pipeline)}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Status das Propostas</div></div>
+      <div class="card-body" style="position:relative">
+        <div style="width:130px;margin:0 auto 10px;position:relative">
+          <canvas id="donut-cv" width="130" height="130" style="display:block"></canvas>
+        </div>
+        <div id="donut-tooltip" style="display:none;position:fixed;padding:6px 10px;border-radius:3px;font-size:11px;font-weight:600;pointer-events:none;z-index:999;white-space:nowrap;color:#fff"></div>
+        <div class="donut-legend" id="donut-leg"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Por Tipo</div></div>
+      <div class="card-body">
+        ${(()=>{
+          const total=Object.values(byType).reduce((s,v)=>s+v,0)||1;
+          const max=Math.max(...Object.values(byType),1);
+          return Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`
+            <div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+                <span style="font-size:12px;font-weight:600">${t}</span>
+                <span style="font-size:10px;color:var(--faint)">${n} · ${Math.round(n/total*100)}%</span>
+              </div>
+              <div style="height:20px;background:#f3f2f1;border-radius:2px;overflow:hidden;position:relative">
+                <div style="width:${n/max*100}%;height:100%;background:${typeColors[t]||'#0078d4'}"></div>
+                ${n/max>0.22?`<span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#fff">${n}</span>`:''}
+              </div>
+            </div>`).join('');
+        })()}
+      </div>
+    </div>
+  </div>
+
+  <!-- Tendência de receita + Heatmap -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <div class="card-title">Receita Contratada — Tendência Mensal</div>
+        ${trendPct!==null?`<span style="font-size:11px;font-weight:700;color:${trendUp?'#107c10':'#a80000'}">${trendUp?'▲':'▼'} ${Math.abs(trendPct)}% vs período anterior</span>`:''}
+      </div>
+      <div class="card-body" style="padding-bottom:0">
+        ${(()=>{
+          const revMonthly={};
+          contracted.forEach(p=>{ if(p.sentDate&&p.sentDate.length>=7){ const ym=p.sentDate.slice(0,7); revMonthly[ym]=(revMonthly[ym]||0)+p.budget; }});
+          const revSorted=Object.entries(revMonthly).sort().slice(-15);
+          if(!revSorted.length) return '<div style="color:var(--faint);font-size:12px;padding:20px 0">Sem dados de contratos com data</div>';
+          const maxR=Math.max(...revSorted.map(m=>m[1]),1);
+          const CHART_H=90;
+          const MO=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+          return `<div style="display:flex;align-items:flex-end;gap:2px;height:${CHART_H}px;margin-bottom:28px">
+            ${revSorted.map(([ym,v],i)=>{
+              const barH=Math.max(4,Math.round(v/maxR*CHART_H));
+              const mo=MO[parseInt(ym.slice(5,7))-1]||'';
+              const yr=ym.slice(2,4);
+              const showLbl=i===0||ym.slice(5,7)==='01'||i===revSorted.length-1||revSorted.length<=8;
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative" title="${ym}: ${fmt(v)}">
+                <span style="font-size:8px;font-weight:700;color:#107c10;margin-bottom:2px">${fmt(v)}</span>
+                <div style="width:100%;background:#107c10;border-radius:2px 2px 0 0;height:${barH}px;min-height:4px;opacity:0.8"></div>
+                <div style="position:absolute;bottom:-24px;left:50%;transform:translateX(-50%) rotate(-40deg);transform-origin:top center;white-space:nowrap;font-size:9px;color:var(--muted);opacity:${showLbl?1:0.5}">${mo}/${yr}</div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        })()}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Propostas Enviadas por Mês</div></div>
+      <div class="card-body" style="padding-bottom:0">
+        ${(()=>{
+          if(!monthlySorted.length) return '<div style="color:var(--faint);font-size:12px">Sem dados</div>';
+          const max=Math.max(...monthlySorted.map(m=>m[1]),1);
+          const CHART_H=90;
+          const MO=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+          return `<div style="display:flex;align-items:flex-end;gap:2px;height:${CHART_H}px;margin-bottom:28px">
+            ${monthlySorted.map(([ym,n],i)=>{
+              const barH=Math.max(4,Math.round(n/max*CHART_H));
+              const mo=MO[parseInt(ym.slice(5,7))-1]||'';
+              const yr=ym.slice(2,4);
+              const showLbl=i===0||ym.slice(5,7)==='01'||i===monthlySorted.length-1||monthlySorted.length<=8;
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative" title="${ym}: ${n}">
+                <span style="font-size:9px;font-weight:700;color:#0078d4;margin-bottom:2px">${n}</span>
+                <div style="width:100%;background:#0078d4;border-radius:2px 2px 0 0;height:${barH}px;min-height:4px"></div>
+                <div style="position:absolute;bottom:-24px;left:50%;transform:translateX(-50%) rotate(-40deg);transform-origin:top center;white-space:nowrap;font-size:9px;color:var(--muted);opacity:${showLbl?1:0.5}">${mo}/${yr}</div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        })()}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Financiamento dos Contratos (R$)</div></div>
+      <div class="card-body bar-chart">
+        ${finSorted.length ? finSorted.map(([f,v])=>`
+          <div class="bar-row">
+            <div class="bar-lbl right" style="width:140px">${f}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${v/finSorted[0][1]*100}%;background:#107c10"></div></div>
+            <div class="bar-val">${fmt(v)}</div>
+          </div>`).join('') : '<div style="color:var(--faint);font-size:12px">Sem contratos com financiamento</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Projetos Assinados por Mês</div></div>
+      <div class="card-body" style="padding-bottom:0">
+        ${(()=>{
+          if(!PROJECTS.length) return '<div style="color:var(--faint);font-size:12px">Sem projetos carregados</div>';
+          const projMonthly={};
+          PROJECTS.forEach(p=>{
+            if(p.signDate&&p.signDate.length>=7){
+              const ym=p.signDate.slice(0,7);
+              projMonthly[ym]=(projMonthly[ym]||0)+1;
+            }
+          });
+          const projSorted=Object.entries(projMonthly).sort().slice(-15);
+          if(!projSorted.length) return '<div style="color:var(--faint);font-size:12px">Sem projetos com data de assinatura</div>';
+          const max=Math.max(...projSorted.map(m=>m[1]),1);
+          const CHART_H=100;
+          const MO=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+          return `<div style="display:flex;align-items:flex-end;gap:2px;height:${CHART_H}px;margin-bottom:28px">
+            ${projSorted.map(([ym,n],i)=>{
+              const barH=Math.max(18,Math.round(n/max*CHART_H));
+              const mo=MO[parseInt(ym.slice(5,7))-1]||'';
+              const yr=ym.slice(2,4);
+              const showLbl=i===0||ym.slice(5,7)==='01'||i===projSorted.length-1||projSorted.length<=8;
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative" title="${ym}: ${n} projeto${n!==1?'s':''}">
+                <span style="font-size:9px;font-weight:700;color:#107c10;margin-bottom:2px">${n}</span>
+                <div style="width:100%;background:#107c10;border-radius:2px 2px 0 0;height:${barH-18}px;min-height:4px"></div>
+                <div style="position:absolute;bottom:-24px;left:50%;transform:translateX(-50%) rotate(-40deg);transform-origin:top center;white-space:nowrap;font-size:9px;color:var(--muted);opacity:${showLbl?1:0.4}">${mo}/${yr}</div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        })()}
+      </div>
+    </div>
+  </div>
+
+
+
+  ${topC.length ? `<div class="card">
+    <div class="card-header"><div class="card-title">Top Contratos por Valor</div></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Codinome</th><th>Cliente</th><th>Coord.</th><th>Financiamento</th><th>Valor Total</th><th>Valor CIT</th></tr></thead>
+        <tbody>${topC.map(p=>`<tr onclick="openModal(${p.id})">
+          <td style="font-weight:600">${esc(p.codename)}</td>
+          <td>${esc(p.client)}</td>
+          <td>${badge(p.coordination)}</td>
+          <td style="font-size:10px;color:var(--faint)">${p.financing||'—'}</td>
+          <td style="font-weight:700;color:var(--green)">${fmt(p.budget)}</td>
+          <td style="color:var(--blue)">${p.budgetCIN>0?fmt(p.budgetCIN):'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>` : ''}`;
+
+  setTimeout(()=>drawDonut('donut-cv','donut-leg',byStatus),50);
+}
+
+
+function drawDonut(cvId,legId,byStatus) {
+  const canvas=document.getElementById(cvId);
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const cx=65,cy=65,r=58,ir=34;
+  const total=Object.values(byStatus).reduce((s,v)=>s+v,0)||1;
+  let angle=-Math.PI/2;
+  const legEl=document.getElementById(legId);
+  if(!legEl) return;
+  legEl.innerHTML='';
+  const slices=[];
+  Object.entries(byStatus).forEach(([status,count])=>{
+    const slice=(count/total)*2*Math.PI;
+    const color=SC[status]||'#a19f9d';
+    slices.push({status,count,color,start:angle,end:angle+slice});
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle,angle+slice);ctx.closePath();ctx.fillStyle=color;ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,ir,angle,angle+slice);ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
+    angle+=slice;
+    const pct=Math.round(count/total*100);
+    legEl.innerHTML+=`<div class="legend-row"><div class="legend-dot" style="background:${color}"></div><span class="legend-name">${status}</span><span class="legend-count" style="color:${color}">${count} <span style="font-size:9px;opacity:0.7">(${pct}%)</span></span></div>`;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,ir,0,2*Math.PI);ctx.fillStyle='#fff';ctx.fill();
+  const tt=document.getElementById('donut-tooltip');
+  if(!tt) return;
+  canvas.onmousemove=function(e){
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left-cx,my=e.clientY-rect.top-cy;
+    const dist=Math.sqrt(mx*mx+my*my);
+    if(dist<ir||dist>r){tt.style.display='none';return;}
+    let ang=Math.atan2(my,mx);
+    const hit=slices.find(s=>{
+      let sa=s.start,ea=s.end;
+      const norm=a=>(a%(2*Math.PI)+(2*Math.PI))%(2*Math.PI);
+      const na=norm(ang),ns=norm(sa),ne=norm(ea);
+      return ns<=ne?na>=ns&&na<=ne:na>=ns||na<=ne;
+    });
+    if(hit){
+      const pct=Math.round(hit.count/total*100);
+      tt.textContent=`${hit.status}: ${hit.count} (${pct}%)`;
+      tt.style.display='block';tt.style.left=(e.clientX+12)+'px';tt.style.top=(e.clientY-10)+'px';tt.style.background=hit.color;
+    } else tt.style.display='none';
+  };
+  canvas.onmouseleave=()=>{tt.style.display='none';};
+}
+
+// ── FUNNEL ───────────────────────────────────────────────────────────────────
+function renderFunnel() {
+  const el=document.getElementById('page-funnel');
+  if(!PROPOSALS.length){el.innerHTML=emptyState('Carregue um Excel para ver o funil');return;}
+  const stageData=STAGES.map(st=>{
+    const items=filtered.filter(p=>st.statuses.includes(p.status));
+    return {...st,count:items.length,budget:items.reduce((s,p)=>s+p.budget,0),items};
+  });
+  const maxCount=Math.max(...stageData.map(s=>s.count),1);
+
+  el.innerHTML=`
+  <div class="grid-2" style="margin-bottom:12px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Funil de Conversão</div></div>
+      <div class="card-body">
+        <div class="funnel-wrap">
+          ${stageData.map((st,i)=>{
+            const pct=Math.max(15,st.count/maxCount*100);
+            const prev=i>0?stageData[i-1].count:null;
+            const conv=prev&&prev>0?Math.round(st.count/prev*100):null;
+            return `${i>0&&i<4?`<div style="text-align:center;font-size:9px;color:var(--faint);padding:1px 0">↓ ${conv!==null?conv+'% conversão':''}</div>`:''}
+            <div class="funnel-row">
+              <div class="funnel-label">${st.name}</div>
+              <div class="funnel-track">
+                <div class="funnel-fill" style="width:${pct}%;background:${st.color}"></div>
+              </div>
+              <div class="funnel-num" style="color:${st.color}">${st.count}</div>
+              <div class="funnel-val">${st.budget>0?fmt(st.budget):''}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Pipeline por Coordenação</div></div>
+      <div class="card-body">
+        ${['CIT','CPQ','CBT','CIF'].map(coord=>{
+          const stages=STAGES.map(st=>({name:st.name,count:filtered.filter(p=>p.coordination===coord&&st.statuses.includes(p.status)).length,color:st.color}));
+          const total=stages.reduce((s,st)=>s+st.count,0);
+          if(!total) return '';
+          return `<div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:700;color:${CC[coord]}">${coord}</span>
+              <span style="font-size:11px;color:var(--faint)">${total} propostas</span>
+            </div>
+            <div style="display:flex;height:20px;border-radius:2px;overflow:hidden">
+              ${stages.filter(s=>s.count>0).map(s=>`<div style="flex:${s.count};background:${s.color};opacity:0.8" title="${s.name}: ${s.count}"></div>`).join('')}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+              ${stages.filter(s=>s.count>0).map(s=>`<span style="font-size:9px;color:${s.color}">■ ${s.name} (${s.count})</span>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+    ${stageData.map(st=>{
+      const clientDomains={'Petrobras':'petrobras.com.br','Shell':'shell.com',"L'Oréal":'loreal.com',
+        'Repsol Sinopec':'repsolsinopec.com','ExxonMobil':'exxonmobil.com','BASF':'basf.com',
+        'Braskem':'braskem.com.br','Stellantis':'stellantis.com','Klabin':'klabin.com.br',
+        'Boticário':'grupoboticario.com.br','Comgás':'comgas.com.br','SENAI':'senai.br'};
+      return `<div class="card">
+        <div class="card-header" style="border-left:3px solid ${st.color}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="card-title" style="color:${st.color}">${st.icon} ${st.name.toUpperCase()}</div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:800;color:${st.color};line-height:1">${st.count}</div>
+              ${st.budget>0?`<div style="font-size:9px;color:var(--faint)">${fmt(st.budget)}</div>`:''}
+            </div>
+          </div>
+        </div>
+        <div style="max-height:380px;overflow-y:auto;padding:8px">
+          ${st.items.slice(0,30).map(p=>{
+            const domain=clientDomains[p.client]||((p.client||'').toLowerCase().replace(/[^a-z0-9]/g,'')+'.com');
+            const initials=(p.client||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+            return `<div onclick="openModal(${p.id})" style="background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:8px;margin-bottom:5px;cursor:pointer"
+              onmouseenter="this.style.borderColor='${st.color}'" onmouseleave="this.style.borderColor='var(--border)'">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+                <div style="width:26px;height:26px;border-radius:4px;overflow:hidden;flex-shrink:0;background:#fff;border:1px solid #e1dfdd;display:flex;align-items:center;justify-content:center">
+                  <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" width="20" height="20" style="object-fit:contain"
+                    onerror="this.style.display='none';this.nextSibling.style.display='flex'" loading="lazy">
+                  <span style="display:none;font-size:9px;font-weight:800;color:${CC[p.coordination]||'#0078d4'};width:100%;height:100%;align-items:center;justify-content:center">${initials}</span>
+                </div>
+                <div style="overflow:hidden;flex:1">
+                  <div style="font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.codename||'(sem nome)')}</div>
+                  <div style="font-size:9px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.client)}</div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                ${badge(p.coordination)}
+                ${p.budget>0?`<span style="font-size:10px;font-weight:700;color:${st.color}">${fmt(p.budget)}</span>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+          ${st.items.length>30?`<div style="text-align:center;font-size:10px;color:var(--faint)">+${st.items.length-30} mais...</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── PROPOSALS TABLE ──────────────────────────────────────────────────────────
+function renderProposals() {
+  const el=document.getElementById('page-proposals');
+  if(!PROPOSALS.length){el.innerHTML=emptyState('Carregue um Excel para ver as propostas');return;}
+  const sorted=[...filtered].sort((a,b)=>{const va=a[sortField]||0,vb=b[sortField]||0;return sortDir*(va>vb?-1:1);});
+  const cols=[['codename','Codinome'],['client','Cliente'],['coordination','Coord.'],
+    ['responsible','Responsável'],['status','Status'],['type','Tipo'],
+    ['budget','Orç. Total'],['budgetCIN','Orç. CIT'],['sentDate','Enviado'],['financing','Financiamento']];
+  el.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div style="font-size:12px;color:var(--faint)">${sorted.length} propostas</div>
+    <button class="topbar-btn primary" onclick="openModal(null)" style="background:var(--blue);color:#fff;padding:5px 14px;border-radius:2px;font-size:12px;font-weight:600;border:none;cursor:pointer">+ Nova Proposta</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr>${cols.map(([f,l])=>`<th onclick="toggleSort('${f}')">${l}${sortField===f?(sortDir>0?' ↑':' ↓'):''}</th>`).join('')}<th>Ações</th></tr></thead>
+      <tbody>${sorted.slice(0,300).map(p=>`<tr onclick="openModal(${p.id})">
+        <td style="font-weight:600">${esc(p.codename)}</td>
+        <td>${esc(p.client)}</td>
+        <td>${badge(p.coordination)}</td>
+        <td>${esc(p.responsible)}</td>
+        <td>${badgeStatus(p.status)}</td>
+        <td style="font-size:10px;color:var(--faint)">${p.type}</td>
+        <td style="font-weight:600;color:var(--green)">${p.budget>0?fmt(p.budget):'—'}</td>
+        <td style="color:var(--blue)">${p.budgetCIN>0?fmt(p.budgetCIN):'—'}</td>
+        <td style="color:var(--faint)">${p.sentDate}</td>
+        <td style="font-size:10px;color:var(--faint)">${p.financing||'—'}</td>
+        <td onclick="event.stopPropagation()">
+          <div style="display:flex;gap:4px">
+            <button onclick="openModal(${p.id})" style="background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue);padding:3px 8px;border-radius:2px;cursor:pointer;font-size:10px">✏️</button>
+            <button onclick="confirmDelete(${p.id})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);padding:3px 8px;border-radius:2px;cursor:pointer;font-size:10px">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>
+    ${sorted.length>300?`<div style="padding:10px;text-align:center;font-size:11px;color:var(--faint)">Exibindo 300 de ${sorted.length} — use filtros para refinar.</div>`:''}
+  </div>`;
+}
+
+function toggleSort(field) {
+  if(sortField===field) sortDir*=-1; else {sortField=field;sortDir=-1;}
+  renderProposals();
+}
+
+// ── PROJETOS ─────────────────────────────────────────────────────────────────
+function riscoBadge(p){
+  const r=p.risco||'';
+  if(!r) return '';
+  const map={'Verde':'risk-verde','Amarelo':'risk-amarelo','Vermelho':'risk-vermelho',
+    'verde':'risk-verde','amarelo':'risk-amarelo','vermelho':'risk-vermelho',
+    'Green':'risk-verde','Yellow':'risk-amarelo','Red':'risk-vermelho'};
+  const cls=map[r]||'risk-amarelo';
+  const icon={'risk-verde':'🟢','risk-amarelo':'🟡','risk-vermelho':'🔴'}[cls]||'⚪';
+  return `<span class="risk-badge ${cls}" title="${esc(p.riscoNota||r)}">${icon} ${r}</span>`;
+}
+
+function renderProjetos() {
+  const el=document.getElementById('page-projetos');
+  if(!PROJECTS.length){el.innerHTML=emptyState('Carregue um Excel com aba "Funil_Projetos" para ver os projetos');return;}
+
+  const ACTIVE=['Execução','Inicialização','Contratação','Finalização'];
+  const active=PROJECTS.filter(p=>ACTIVE.includes(p.status));
+  const ended=PROJECTS.filter(p=>p.status==='Encerrado');
+  const cancelled=PROJECTS.filter(p=>p.status==='Cancelado');
+  const totalBudget=active.reduce((s,p)=>s+p.budget,0);
+  const byCoord={};
+  active.forEach(p=>{const c=p.coordination||'?';if(!byCoord[c])byCoord[c]=[];byCoord[c].push(p);});
+  const sColors={'Execução':'#107c10','Inicialização':'#0078d4','Contratação':'#7d5a00','Finalização':'#8764b8','Encerrado':'#a19f9d','Cancelado':'#a80000'};
+  const sBg={'Execução':'#dff6dd','Inicialização':'#deecf9','Contratação':'#fff4ce','Finalização':'#f3f0ff','Encerrado':'#f3f2f1','Cancelado':'#fde7e9'};
+
+  // Near-end alerts (ending within 90 days)
+  const now=new Date();
+  const nearEnd=PROJECTS.filter(p=>{
+    if(!ACTIVE.includes(p.status)) return false;
+    if(!p.signDate||!p.contractMonths) return false;
+    const end=new Date(p.signDate.slice(0,7)+'-01');
+    end.setMonth(end.getMonth()+Math.round(p.contractMonths));
+    const days=Math.round((end-now)/(1000*60*60*24));
+    p._daysLeft=days;
+    return days>=0&&days<=90;
+  }).sort((a,b)=>a._daysLeft-b._daysLeft);
+
+  const atRisk=active.filter(p=>p.risco&&p.risco.toLowerCase().includes('vermelho'));
+  const riskCount={'Verde':0,'Amarelo':0,'Vermelho':0};
+  active.forEach(p=>{if(p.risco&&riskCount[p.risco]!==undefined) riskCount[p.risco]++;});
+
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
+    ${[
+      {l:'Projetos ativos',    v:active.length,    c:'var(--green)', s:'em execução/init'},
+      {l:'Orçamento total',    v:fmt(totalBudget), c:'var(--blue)',  s:'projetos ativos'},
+      {l:'Em execução',        v:PROJECTS.filter(p=>p.status==='Execução').length, c:'#107c10', s:'projetos'},
+      {l:'Encerrados',         v:ended.length,     c:'var(--faint)', s:'histórico'},
+      {l:'Cancelados',         v:cancelled.length, c:'#a80000',      s:'projetos', bg:'#fde7e9'},
+    ].map(k=>`<div class="kpi" style="${k.bg?'background:'+k.bg:''}"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div><div class="kpi-accent" style="background:${k.c}"></div></div>`).join('')}
+  </div>
+
+  <!-- Risk summary row -->
+  ${(riskCount.Verde+riskCount.Amarelo+riskCount.Vermelho>0)?`
+  <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Semáforo de risco:</span>
+    <span class="risk-badge risk-verde" style="font-size:13px">🟢 ${riskCount.Verde} Verde</span>
+    <span class="risk-badge risk-amarelo" style="font-size:13px">🟡 ${riskCount.Amarelo} Amarelo</span>
+    <span class="risk-badge risk-vermelho" style="font-size:13px">🔴 ${riskCount.Vermelho} Vermelho</span>
+  </div>`:''}
+
+  <!-- Near-end alert -->
+  ${nearEnd.length>0?`<div class="card alert-card" style="margin-bottom:12px">
+    <div class="card-header"><div class="card-title" style="color:var(--red)">🚨 Projetos Encerrando nos Próximos 90 dias</div></div>
+    <div>${nearEnd.map(p=>`<div class="alert-row">
+      <div class="alert-icon">📅</div>
+      <div style="flex:1"><strong>${esc(p.codename)}</strong> · ${esc(p.client)}</div>
+      ${badge(p.coordination)}
+      ${riscoBadge(p)}
+      <div style="color:${p._daysLeft<=30?'#a80000':'#ff8c00'};font-weight:700;font-size:11px">${p._daysLeft}d restantes</div>
+    </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+    ${['CIT','CPQ','CIF','CBT'].map(coord=>{
+      const projs=(byCoord[coord]||[]);
+      const cRisk={'Verde':projs.filter(p=>p.risco==='Verde').length,'Amarelo':projs.filter(p=>p.risco==='Amarelo').length,'Vermelho':projs.filter(p=>p.risco==='Vermelho').length};
+      return `<div class="card" style="border-top:3px solid ${CC[coord]}">
+        <div class="card-header"><div class="card-title" style="color:${CC[coord]}">${coord}</div></div>
+        <div class="card-body" style="padding:10px 14px">
+          <div style="font-size:26px;font-weight:800;color:${CC[coord]}">${projs.length}</div>
+          <div style="font-size:10px;color:var(--faint);margin-bottom:6px">projetos ativos</div>
+          <div style="font-size:12px;font-weight:600;color:var(--green)">${fmt(projs.reduce((s,p)=>s+p.budget,0))}</div>
+          <div style="font-size:10px;color:var(--faint);margin-bottom:8px">orçamento</div>
+          ${(cRisk.Verde+cRisk.Amarelo+cRisk.Vermelho>0)?`<div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${cRisk.Verde>0?`<span class="risk-badge risk-verde" style="font-size:9px">🟢 ${cRisk.Verde}</span>`:''}
+            ${cRisk.Amarelo>0?`<span class="risk-badge risk-amarelo" style="font-size:9px">🟡 ${cRisk.Amarelo}</span>`:''}
+            ${cRisk.Vermelho>0?`<span class="risk-badge risk-vermelho" style="font-size:9px">🔴 ${cRisk.Vermelho}</span>`:''}
+          </div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="card">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div class="card-title">Todos os Projetos (${PROJECTS.length})</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-primary" onclick="openProjectModal(null)" style="font-size:11px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:3px;cursor:pointer">+ Novo Projeto</button>
+        <select class="filter-select" id="proj-filter-status" onchange="renderProjetos()" style="font-size:10px">
+          <option value="">Todos os status</option>
+          ${['Execução','Inicialização','Contratação','Finalização','Encerrado','Cancelado'].map(s=>`<option ${(document.getElementById('proj-filter-status')||{value:''}).value===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <select class="filter-select" id="proj-filter-risco" onchange="renderProjetos()" style="font-size:10px">
+          <option value="">Todos os riscos</option>
+          <option>Verde</option><option>Amarelo</option><option>Vermelho</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Cliente</th><th>Codinome</th><th>Coord.</th><th>Responsável</th><th>Status</th><th>Risco</th><th>Tipo</th><th>Financiamento</th><th>Orçamento</th><th>Receita Ext.</th><th>Início</th><th>Fim prev.</th></tr></thead>
+        <tbody>${PROJECTS
+          .filter(p=>{
+            const sf=document.getElementById('proj-filter-status');
+            const rf=document.getElementById('proj-filter-risco');
+            const sv=sf?sf.value:''; const rv=rf?rf.value:'';
+            if(sv&&p.status!==sv) return false;
+            if(rv&&p.risco!==rv) return false;
+            return true;
+          })
+          .sort((a,b)=>['Execução','Inicialização','Contratação','Finalização','Encerrado','Cancelado'].indexOf(a.status)-['Execução','Inicialização','Contratação','Finalização','Encerrado','Cancelado'].indexOf(b.status))
+          .map(p=>{
+            const endDate=(()=>{if(!p.signDate||!p.contractMonths) return '—';const d=new Date(p.signDate.slice(0,7)+'-01');d.setMonth(d.getMonth()+Math.round(p.contractMonths));return d.toISOString().slice(0,7);})();
+            return `<tr onclick="openProjectModal(${p.id})" style="cursor:pointer" onmouseenter="this.style.background='#eff6fc'" onmouseleave="this.style.background=''">
+              <td style="font-weight:600">${esc(p.client)}</td>
+              <td style="color:var(--blue);font-weight:600">${esc(p.codename)}</td>
+              <td>${badge(p.coordination)}</td>
+              <td style="color:var(--muted)">${esc(p.responsible)}</td>
+              <td><span style="padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700;background:${sBg[p.status]||'#f3f2f1'};color:${sColors[p.status]||'#333'}">${p.status}</span></td>
+              <td>${riscoBadge(p)||'<span style="color:var(--faint);font-size:10px">—</span>'}</td>
+              <td style="font-size:10px;color:var(--faint)">${p.type}</td>
+              <td style="font-size:10px;color:var(--faint)">${p.financing||'—'}</td>
+              <td style="font-weight:600;color:var(--green)">${p.budget>0?fmt(p.budget):'—'}</td>
+              <td style="color:var(--blue)">${p.externalRevenue>0?fmt(p.externalRevenue):'—'}</td>
+              <td style="color:var(--faint);font-size:10px">${p.signDate||'—'}</td>
+              <td style="font-size:10px;${endDate!=='—'&&p._daysLeft<=90?'color:#a80000;font-weight:700':''}">${endDate}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── TEAM ─────────────────────────────────────────────────────────────────────
+function normalizeName(raw) {
+  // No hardcoded name mapping — names are used as-is from the Excel data
+  return (raw||'').trim();
+}
+
+function buildTeamData() {
+  const ACTIVE_S=['Previsto','Em elaboração','Enviado','Aceito','Negociação'];
+  const teamMap={};
+  CIN_TEAM.forEach(n=>{teamMap[n]={name:n,activeProposals:[],contractedProposals:[],refusedProposals:[],execProjects:[],initProjects:[],endedProjects:[]};});
+  PROPOSALS.forEach(p=>{
+    [p.responsible,p.focalPoint].filter(Boolean).forEach(raw=>{
+      const name=normalizeName(raw.trim());
+      if(!teamMap[name]) return;
+      const t=teamMap[name];
+      if(p.status==='Contratado') t.contractedProposals.push(p);
+      else if(ACTIVE_S.includes(p.status)) t.activeProposals.push(p);
+      else t.refusedProposals.push(p);
+    });
+  });
+  PROJECTS.forEach(p=>{
+    const name=normalizeName((p.responsible||'').trim());
+    if(!teamMap[name]) return;
+    const t=teamMap[name];
+    if(['Execução','Finalização'].includes(p.status)) t.execProjects.push(p);
+    else if(['Inicialização','Contratação'].includes(p.status)) t.initProjects.push(p);
+    else t.endedProjects.push(p);
+  });
+  return CIN_TEAM.map(name=>{
+    const t=teamMap[name];
+    const execCount=t.execProjects.length+t.initProjects.length;
+    const activeCount=t.activeProposals.length;
+    const workload=execCount*3+activeCount;
+    return {...t,execCount,activeCount,workload,
+      budgetExec:t.execProjects.concat(t.initProjects).reduce((s,p)=>s+p.budget,0),
+      contractedBudget:t.contractedProposals.reduce((s,p)=>s+p.budget,0)};
+  }).sort((a,b)=>b.workload-a.workload);
+}
+
+function renderTeam() {
+  const el=document.getElementById('page-team');
+  const team=buildTeamData();
+  const maxWorkload=Math.max(...team.map(t=>t.workload),1);
+  const selectedName=teamSelectedName;
+  const wColor=t=>t.execCount>=5?'#a80000':t.execCount>=3?'#ff8c00':t.execCount===0&&t.activeCount<=1?'#605e5c':'#107c10';
+  const wBg=t=>t.execCount>=5?'#fde7e9':t.execCount>=3?'#fff0e0':t.execCount===0&&t.activeCount<=1?'#f3f2f1':'#dff6dd';
+  const wLabel=t=>t.execCount>=5?'⚠️ Sobrecarregada':t.execCount>=3?'🔶 Ocupada':t.execCount===0&&t.activeCount<=1?'💤 Suboperando':'✅ OK';
+
+  const overloaded=team.filter(t=>t.execCount>=5);
+  const underload=team.filter(t=>t.execCount===0&&t.activeCount<=1);
+
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
+    ${[
+      {l:'Equipe CIT',        v:team.length,                                           c:'var(--blue)',  s:'pessoas rastreadas'},
+      {l:'Sobrecarregadas',   v:overloaded.length,                                     c:'#a80000',      s:'≥ 5 projetos ativos', bg:'#fde7e9'},
+      {l:'Projetos em exec.', v:team.reduce((s,t)=>s+t.execCount,0),                  c:'var(--green)', s:'total da equipe'},
+      {l:'Pipeline proposto', v:team.reduce((s,t)=>s+t.activeCount,0),                c:'var(--blue)',  s:'propostas em aberto'},
+      {l:'Suboperando',       v:underload.length,                                      c:'#605e5c',      s:'0 proj + ≤1 ativa', bg:'#f3f2f1'},
+    ].map(k=>`<div class="kpi" style="${k.bg?'background:'+k.bg:''}"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div><div class="kpi-accent" style="background:${k.c}"></div></div>`).join('')}
+  </div>
+  <div style="display:grid;grid-template-columns:${selectedName?'1fr 380px':'1fr'};gap:12px;align-items:start">
+    <div class="team-grid">
+      ${team.map(t=>{
+        const color=wColor(t),bg=wBg(t);
+        const isSelected=t.name===selectedName;
+        const wPct=t.workload/maxWorkload*100;
+        return `<div class="team-card" onclick="selectTeamMember('${esc(t.name)}')"
+          style="${isSelected?'outline:2px solid var(--blue);outline-offset:2px;':''}border-left:3px solid ${color}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div class="team-name">${esc(t.name)}</div>
+              <div style="font-size:10px;font-weight:700;color:${color}">${wLabel(t)}</div>
+            </div>
+            <div style="width:32px;height:32px;border-radius:50%;background:${bg};border:2px solid ${color};
+              display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${color}">
+              ${esc(t.name).charAt(0)}
+            </div>
+          </div>
+          <div class="team-stats">
+            <div class="team-stat"><div class="team-stat-num" style="color:${color}">${t.execCount}</div><div class="team-stat-lbl">Em execução</div></div>
+            <div class="team-stat"><div class="team-stat-num" style="color:#0078d4">${t.activeCount}</div><div class="team-stat-lbl">Prop. ativas</div></div>
+            <div class="team-stat"><div class="team-stat-num" style="color:var(--green)">${t.contractedProposals.length}</div><div class="team-stat-lbl">Contratadas</div></div>
+            <div class="team-stat"><div class="team-stat-num" style="color:var(--faint)">${t.refusedProposals.length}</div><div class="team-stat-lbl">Recusadas</div></div>
+          </div>
+          <div class="workload-bar" style="margin:8px 0 6px">
+            <div class="workload-fill" style="width:${wPct}%;background:${color}"></div>
+          </div>
+          <div class="team-projects">
+            ${t.execProjects.concat(t.initProjects).slice(0,4).map(p=>`<span class="team-proj-tag">${esc((p.codename||p.client||'').slice(0,20))}</span>`).join('')}
+            ${t.execCount>4?`<span class="team-proj-tag">+${t.execCount-4} mais</span>`:''}
+            ${t.execCount===0&&t.activeCount>0?t.activeProposals.slice(0,3).map(p=>`<span class="team-proj-tag" style="color:var(--blue)">${esc((p.codename||p.client||'').slice(0,18))}</span>`).join(''):''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${selectedName?`<div class="card" id="team-detail-panel" style="position:sticky;top:140px">${renderTeamDetailPanel(team.find(t=>t.name===selectedName))}</div>`:''}
+  </div>`;
+}
+
+function renderTeamDetailPanel(t) {
+  if(!t) return '';
+  const pColor=t.execCount>=5?'#a80000':t.execCount>=3?'#ff8c00':t.execCount===0?'#605e5c':'#107c10';
+  const pLabel=t.execCount>=5?'⚠️ Sobrecarregada':t.execCount>=3?'🔶 Muito ocupada':t.execCount===0?'💤 Suboperando':'✅ Carga normal';
+  const allActive=[...t.execProjects,...t.initProjects];
+  const projRow=(p,isProj)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:2px;margin-bottom:3px;cursor:pointer;border:1px solid var(--border)"
+      ${!isProj?`onclick="openModal(${p.id})"`:''}
+      onmouseenter="this.style.background='#eff6fc'" onmouseleave="this.style.background=''">
+      <div style="overflow:hidden;flex:1;margin-right:6px">
+        <div style="font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.codename||'(sem nome)')}</div>
+        <div style="font-size:9px;color:var(--faint);overflow:hidden;text-overflow:ellipsis">${esc(p.client||'')}</div>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;flex-shrink:0">
+        ${isProj?`<span style="padding:2px 5px;border-radius:2px;font-size:9px;font-weight:700;background:${{Execução:'#dff6dd',Inicialização:'#deecf9',Contratação:'#fff4ce'}[p.status]||'#f3f2f1'};color:${{Execução:'#107c10',Inicialização:'#0078d4',Contratação:'#7d5a00'}[p.status]||'#605e5c'}">${p.status}</span>`
+          :`<span style="padding:2px 5px;border-radius:2px;font-size:9px;font-weight:700;background:${SC[p.status]||'#eee'}22;color:${SC[p.status]||'#666'}">${p.status}</span>`}
+        ${p.budget>0?`<span style="font-size:10px;font-weight:700;color:var(--green)">${fmt(p.budget)}</span>`:''}
+      </div>
+    </div>`;
+  return `
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:38px;height:38px;border-radius:50%;background:${pColor}18;border:2.5px solid ${pColor};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:${pColor}">${esc(t.name).charAt(0)}</div>
+        <div><div style="font-weight:700;font-size:14px">${esc(t.name)}</div><div style="font-size:10px;font-weight:700;color:${pColor}">${pLabel}</div></div>
+      </div>
+      <button onclick="selectTeamMember(null)" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--faint)">×</button>
+    </div>
+    <div style="padding:10px 14px 14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px">
+        ${[
+          {v:t.execCount,    l:'Em execução',  c:pColor},
+          {v:t.activeCount,  l:'Prop. ativas', c:'var(--blue)'},
+          {v:fmt(t.budgetExec), l:'Orç. projetos', c:'var(--green)', sm:true},
+        ].map(k=>`<div style="background:var(--bg);border-radius:2px;padding:8px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:${k.sm?'12':'22'}px;font-weight:800;color:${k.c};line-height:1.2">${k.v}</div>
+          <div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">${k.l}</div>
+        </div>`).join('')}
+      </div>
+      ${allActive.length>0?`<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">Projetos ativos (${allActive.length})</div>
+      <div style="max-height:200px;overflow-y:auto;margin-bottom:10px">${allActive.map(p=>projRow(p,true)).join('')}</div>`:''}
+      ${t.activeProposals.length>0?`<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">Propostas no funil (${t.activeProposals.length})</div>
+      <div style="max-height:160px;overflow-y:auto">${t.activeProposals.map(p=>projRow(p,false)).join('')}</div>`:''}
+      ${t.endedProjects.length>0?`<div style="font-size:10px;color:var(--faint);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${t.endedProjects.length} projetos encerrados no histórico</div>`:''}
+    </div>`;
+}
+
+function selectTeamMember(name) {
+  teamSelectedName=(name===teamSelectedName)?null:name;
+  renderTeam();
+}
+
+
+// ── PROJECT MODAL ─────────────────────────────────────────────────────────────
+let editingProjectId = null;
+
+function openProjectModal(id) {
+  const p = id != null ? PROJECTS.find(x => x.id === id) : null;
+  editingProjectId = id;
+  document.getElementById('proj-modal-title').textContent = p ? '✏️ Editar Projeto' : '➕ Novo Projeto';
+  document.getElementById('proj-modal-delete-btn').style.display = p ? 'block' : 'none';
+  const f = p || {
+    id: Date.now(), coordination: 'CIT', client: '', codename: '', responsible: '',
+    leader: '', analyst: '', status: 'Inicialização', type: 'Projeto', financing: '',
+    signDate: '', contractMonths: 0, budget: 0, externalRevenue: 0,
+    risco: '', riscoNota: ''
+  };
+  document.getElementById('proj-modal-form').innerHTML = `
+    <div class="form-field"><label class="form-label">Coordenação</label>
+      <select class="form-select" id="pf-coord">${['CIT','CPQ','CBT','CIF'].map(x=>`<option${f.coordination===x?' selected':''}>${x}</option>`).join('')}</select>
+    </div>
+    <div class="form-field"><label class="form-label">Status</label>
+      <select class="form-select" id="pf-status">${['Inicialização','Contratação','Execução','Finalização','Encerrado','Cancelado'].map(x=>`<option${f.status===x?' selected':''}>${x}</option>`).join('')}</select>
+    </div>
+    <div class="form-field"><label class="form-label">Cliente</label>
+      <input class="form-input" id="pf-client" value="${esc(f.client)}">
+    </div>
+    <div class="form-field"><label class="form-label">Codinome</label>
+      <input class="form-input" id="pf-code" value="${esc(f.codename)}">
+    </div>
+    <div class="form-field"><label class="form-label">Responsável</label>
+      <input class="form-input" id="pf-resp" list="team-datalist" value="${esc(f.responsible)}" placeholder="Nome do responsável">
+    </div>
+    <div class="form-field"><label class="form-label">Líder Técnico</label>
+      <input class="form-input" id="pf-leader" value="${esc(f.leader||'')}">
+    </div>
+    <div class="form-field"><label class="form-label">Tipo</label>
+      <select class="form-select" id="pf-type">${['Projeto','Serviço','Com fomento','Sem fomento'].map(x=>`<option${f.type===x?' selected':''}>${x}</option>`).join('')}</select>
+    </div>
+    <div class="form-field"><label class="form-label">Financiamento</label>
+      <select class="form-select" id="pf-fin">${['','Contratação direta','EMBRAPII - CG','EMBRAPII - BFA','ANP','ANEEL','FINEP','CNPq','Outro'].map(x=>`<option${f.financing===x?' selected':''}>${x}</option>`).join('')}</select>
+    </div>
+    <div class="form-field"><label class="form-label">Data Assinatura (AAAA-MM-DD)</label>
+      <input class="form-input" id="pf-date" value="${f.signDate||''}">
+    </div>
+    <div class="form-field"><label class="form-label">Vigência (meses)</label>
+      <input class="form-input" id="pf-months" type="number" value="${f.contractMonths||0}">
+    </div>
+    <div class="form-field"><label class="form-label">Orçamento Total (R$)</label>
+      <input class="form-input" id="pf-budget" type="number" value="${f.budget||0}">
+    </div>
+    <div class="form-field"><label class="form-label">Receita Externa (R$)</label>
+      <input class="form-input" id="pf-ext" type="number" value="${f.externalRevenue||0}">
+    </div>
+    <div class="form-field"><label class="form-label">🚦 Risco</label>
+      <select class="form-select" id="pf-risco"><option value="">—</option>${['Verde','Amarelo','Vermelho'].map(x=>`<option${f.risco===x?' selected':''}>${x}</option>`).join('')}</select>
+    </div>
+    <div class="form-field"><label class="form-label">Notas de Risco</label>
+      <input class="form-input" id="pf-risconota" value="${esc(f.riscoNota||'')}">
+    </div>
+  `;
+  document.getElementById('proj-modal-overlay').style.display = 'flex';
+}
+
+function closeProjectModal() {
+  document.getElementById('proj-modal-overlay').style.display = 'none';
+  editingProjectId = null;
+}
+
+function saveProject() {
+  const proj = {
+    id:             editingProjectId || Date.now(),
+    coordination:   document.getElementById('pf-coord').value,
+    status:         document.getElementById('pf-status').value,
+    client:         document.getElementById('pf-client').value.trim(),
+    codename:       document.getElementById('pf-code').value.trim(),
+    responsible:    document.getElementById('pf-resp').value,
+    leader:         document.getElementById('pf-leader').value.trim(),
+    analyst:        '',
+    type:           document.getElementById('pf-type').value,
+    financing:      document.getElementById('pf-fin').value,
+    signDate:       document.getElementById('pf-date').value.trim(),
+    contractMonths: parseFloat(document.getElementById('pf-months').value) || 0,
+    budget:         parseFloat(document.getElementById('pf-budget').value) || 0,
+    externalRevenue:parseFloat(document.getElementById('pf-ext').value) || 0,
+    risco:          document.getElementById('pf-risco').value,
+    riscoNota:      document.getElementById('pf-risconota').value.trim(),
+  };
+  const idx = PROJECTS.findIndex(p => p.id === editingProjectId);
+  if (idx >= 0) PROJECTS[idx] = proj; else PROJECTS.unshift(proj);
+  closeProjectModal();
+  saveToCache();
+  renderProjetos();
+}
+
+function deleteProject() {
+  if (confirm('Confirma exclusão deste projeto?')) {
+    PROJECTS = PROJECTS.filter(p => p.id !== editingProjectId);
+    closeProjectModal();
+    saveToCache();
+    renderProjetos();
+  }
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  const p=id!=null?PROPOSALS.find(x=>x.id===id):null;
+  editingId=id;
+  document.getElementById('modal-title-text').textContent=p?'✏️ Editar Proposta':'➕ Nova Proposta';
+  document.getElementById('modal-delete-btn').style.display=p?'block':'none';
+  const f=p||{id:Date.now(),coordination:'CIT',focalPoint:'',responsible:'',codename:'',client:'',type:'Projeto',status:'Previsto',document:'Ideia conceitual',budget:0,budgetCIN:0,months:0,financing:'',sentDate:'',probability:'',detail:''};
+  document.getElementById('modal-form').innerHTML=`
+    <div class="form-field"><label class="form-label">Codinome</label><input class="form-input" id="fi-code" value="${esc(f.codename)}"></div>
+    <div class="form-field"><label class="form-label">Cliente</label><input class="form-input" id="fi-client" value="${esc(f.client)}"></div>
+    <div class="form-field"><label class="form-label">Responsável</label>
+      <input class="form-input" id="fi-resp" list="team-datalist" value="${esc(f.responsible)}" placeholder="Nome do responsável">
+      <datalist id="team-datalist">${TEAM_LIST.map(x=>`<option value="${esc(x)}">`).join('')}</datalist></div>
+    <div class="form-field"><label class="form-label">Ponto Focal</label>
+      <input class="form-input" id="fi-fp" list="team-datalist" value="${esc(f.focalPoint)}" placeholder="Nome do ponto focal (opcional)"></div>
+    <div class="form-field"><label class="form-label">Coordenação</label>
+      <select class="form-select" id="fi-coord">${['CIT','CPQ','CBT','CIF'].map(x=>`<option${f.coordination===x?' selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="form-field"><label class="form-label">Status</label>
+      <select class="form-select" id="fi-status">${['Previsto','Em elaboração','Enviado','Aceito','Negociação','Contratado','Recusado'].map(x=>`<option${f.status===x?' selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="form-field"><label class="form-label">Tipo</label>
+      <select class="form-select" id="fi-type">${['Projeto','Serviço','Com fomento','Sem fomento'].map(x=>`<option${f.type===x?' selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="form-field"><label class="form-label">Financiamento</label>
+      <select class="form-select" id="fi-fin">${['','Contratação direta','EMBRAPII - CG','EMBRAPII - BFA','EMBRAPII - Outros','ANP','ANP/EMBRAPII','Edital SENAI','Outros editais','ANEEL','BFA'].map(x=>`<option${f.financing===x?' selected':''}>${x||'—'}</option>`).join('')}</select></div>
+    <div class="form-field"><label class="form-label">Orçamento Total (R$)</label><input class="form-input" id="fi-budget" type="number" value="${f.budget}"></div>
+    <div class="form-field"><label class="form-label">Orçamento CIT (R$)</label><input class="form-input" id="fi-budgetCIN" type="number" value="${f.budgetCIN}"></div>
+    <div class="form-field"><label class="form-label">Prazo (meses)</label><input class="form-input" id="fi-months" type="number" value="${f.months}"></div>
+    <div class="form-field"><label class="form-label">Data Envio (AAAA-MM)</label><input class="form-input" id="fi-date" value="${f.sentDate}" placeholder="ex: 2025-03"></div>
+    <div class="form-field"><label class="form-label">Probabilidade</label>
+      <select class="form-select" id="fi-prob">${['','Baixo','Médio','Alto'].map(x=>`<option${f.probability===x?' selected':''}>${x||'—'}</option>`).join('')}</select></div>
+    <div class="form-field"><label class="form-label">Documento</label>
+      <select class="form-select" id="fi-doc">${['Ideia conceitual','Proposta técnica','Cronograma e orçamento','Proposta comercial'].map(x=>`<option${f.document===x?' selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="form-field full"><label class="form-label">Detalhamento</label><textarea class="form-textarea" id="fi-detail">${esc(f.detail)}</textarea></div>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+
+function closeModal(){document.getElementById('modal-overlay').style.display='none';editingId=null;}
+
+function saveProposal() {
+  const form={
+    id:editingId||Date.now(),
+    codename:document.getElementById('fi-code').value.trim(),
+    client:document.getElementById('fi-client').value.trim(),
+    responsible:document.getElementById('fi-resp').value,
+    focalPoint:document.getElementById('fi-fp').value,
+    coordination:document.getElementById('fi-coord').value,
+    status:document.getElementById('fi-status').value,
+    type:document.getElementById('fi-type').value,
+    financing:document.getElementById('fi-fin').value,
+    budget:parseFloat(document.getElementById('fi-budget').value)||0,
+    budgetCIN:parseFloat(document.getElementById('fi-budgetCIN').value)||0,
+    months:parseInt(document.getElementById('fi-months').value)||0,
+    sentDate:document.getElementById('fi-date').value.trim(),
+    probability:document.getElementById('fi-prob').value,
+    document:document.getElementById('fi-doc').value,
+    detail:document.getElementById('fi-detail').value.trim(),
+  };
+  const idx=PROPOSALS.findIndex(p=>p.id===editingId);
+  if(idx>=0) PROPOSALS[idx]=form; else PROPOSALS.unshift(form);
+  closeModal();
+  applyFilters();
+  saveToCache();
+}
+
+function deleteProposal(){
+  if(confirm('Confirma exclusão desta proposta?')){
+    PROPOSALS=PROPOSALS.filter(p=>p.id!==editingId);
+    closeModal();applyFilters();
+  }
+}
+
+function confirmDelete(id){editingId=id;deleteProposal();}
+
+// ── EXPORT ───────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const headers=["ID","Coordenação","Responsável","Ponto Focal","Codinome","Cliente","Tipo","Status","Orçamento Total","Orçamento CIT","Meses","Financiamento","Data Envio","Probabilidade","Detalhe"];
+  const rows=filtered.map(p=>[p.id,p.coordination,p.responsible,p.focalPoint,p.codename,p.client,p.type,p.status,p.budget,p.budgetCIN,p.months,p.financing,p.sentDate,p.probability,p.detail]);
+  const csv=[headers.join(';'),...rows.map(r=>r.join(';'))].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`funil_cit_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportExcel(){
+  if(typeof XLSX==='undefined'){alert('SheetJS não carregado');return;}
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Propostas
+  const propHeaders=["ID","Coordenação","Responsável","Ponto Focal","Codinome","Cliente","Tipo","Status",
+    "Orçamento Total","Orçamento CIT","Prazo (meses)","Financiamento","Data Envio","Probabilidade","Detalhe"];
+  const propRows=filtered.map(p=>[p.id,p.coordination,p.responsible,p.focalPoint,p.codename,p.client,
+    p.type,p.status,p.budget,p.budgetCIN,p.months,p.financing,p.sentDate,p.probability,p.detail]);
+  const ws1=XLSX.utils.aoa_to_sheet([propHeaders,...propRows]);
+  // Column widths
+  ws1['!cols']=[{wch:8},{wch:12},{wch:20},{wch:20},{wch:20},{wch:30},{wch:14},{wch:16},{wch:16},{wch:16},
+    {wch:10},{wch:22},{wch:12},{wch:12},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Funil_Vendas');
+
+  // Sheet 2: Projetos
+  if(PROJECTS.length){
+    const projHeaders=["Coordenação","Cliente","Codinome","Responsável","Líder Técnico","Analista",
+      "Status","Tipo","Financiamento","Data Assinatura","Vigência (meses)","Orçamento","Receita Externa",
+      "Risco","Notas Risco"];
+    const projRows=PROJECTS.map(p=>[p.coordination,p.client,p.codename,p.responsible,p.leader,p.analyst,
+      p.status,p.type,p.financing,p.signDate,p.contractMonths,p.budget,p.externalRevenue,
+      p.risco||'',p.riscoNota||'']);
+    const ws2=XLSX.utils.aoa_to_sheet([projHeaders,...projRows]);
+    ws2['!cols']=[{wch:12},{wch:30},{wch:20},{wch:20},{wch:20},{wch:20},{wch:14},{wch:14},
+      {wch:22},{wch:14},{wch:14},{wch:16},{wch:16},{wch:10},{wch:40}];
+    XLSX.utils.book_append_sheet(wb,ws2,'Funil_Projetos');
+  }
+
+  // Sheet 3: Resumo KPIs
+  const contracted=filtered.filter(p=>p.status==='Contratado');
+  const pipeline=filtered.filter(p=>['Enviado','Aceito','Negociação'].includes(p.status));
+  const sent=filtered.filter(p=>!['Previsto','Em elaboração'].includes(p.status));
+  const cRev=contracted.reduce((s,p)=>s+p.budget,0);
+  const pVal=pipeline.reduce((s,p)=>s+p.budget,0);
+  const conv=sent.length?Math.round(contracted.length/sent.length*100):0;
+  const probW={'Baixo':0.2,'Médio':0.5,'Alto':0.8};
+  const pWeighted=pipeline.reduce((s,p)=>s+p.budget*(probW[p.probability]||0.4),0);
+  const resumo=[
+    ['Indicador','Valor'],
+    ['Data extração', new Date().toLocaleDateString('pt-BR')],
+    ['Total propostas', PROPOSALS.length],
+    ['Propostas filtradas', filtered.length],
+    ['Receita Contratada (R$)', cRev],
+    ['Pipeline Ativo (R$)', pVal],
+    ['Pipeline Ponderado (R$)', Math.round(pWeighted)],
+    ['Taxa de Conversão (%)', conv],
+    ['Ticket Médio (R$)', contracted.length?Math.round(cRev/contracted.length):0],
+    ['Total Projetos', PROJECTS.length],
+    ['Projetos Ativos', PROJECTS.filter(p=>['Execução','Inicialização','Contratação','Finalização'].includes(p.status)).length],
+  ];
+  const ws3=XLSX.utils.aoa_to_sheet(resumo);
+  ws3['!cols']=[{wch:28},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Resumo');
+
+  XLSX.writeFile(wb,`funil_cit_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+
+// ── CACHE (localStorage) ─────────────────────────────────────────────────────
+const CACHE_KEY = 'funil_cin_data_v1';
+const CACHE_META_KEY = 'funil_cin_meta_v1';
+
+function saveToCache() {
+  try {
+    const meta = {date:new Date().toISOString(), proposals:PROPOSALS.length, projects:PROJECTS.length};
+    localStorage.setItem(CACHE_META_KEY, JSON.stringify(meta));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({PROPOSALS, PROJECTS}));
+  } catch(e){ console.warn('Cache save failed:',e.message); }
+}
+
+function loadCacheAndGo() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    PROPOSALS = data.PROPOSALS || [];
+    PROJECTS  = data.PROJECTS  || [];
+    rebuildTeamLists();
+    activateDashboard();
+  } catch(e){ alert('Erro ao carregar cache: ' + e.message); }
+}
+
+function discardCache() {
+  clearCache();
+  document.getElementById('cache-banner').style.display='none';
+}
+
+function clearCache() {
+  try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(CACHE_META_KEY); } catch(e){}
+}
+
+function getCacheMeta() {
+  try { return JSON.parse(localStorage.getItem(CACHE_META_KEY)||'null'); } catch(e){ return null; }
+}
+
+function activateDashboard() {
+  const years=[...new Set(PROPOSALS.map(p=>p.sentDate).filter(Boolean).map(d=>d.slice(0,4)))].sort().reverse();
+  const fy=document.getElementById('f-year');
+  fy.innerHTML='<option value="">Todos</option>'+years.map(y=>`<option>${y}</option>`).join('');
+  document.getElementById('page-upload').style.display='none';
+  document.getElementById('navtabs').style.display='flex';
+  document.getElementById('filterbar').style.display='flex';
+  updateTopbarRight();
+  applyFilters();
+  setTab('dashboard');
+}
+
+function updateTopbarRight() {
+  const meta=getCacheMeta();
+  const savedStr=meta?` · salvo ${fmtDateShort(meta.date)}`:'';
+  document.getElementById('topbar-right').innerHTML=`
+    <span style="color:#a0c4e8;font-size:11px">${PROPOSALS.length} propostas · ${PROJECTS.length} projetos${savedStr}</span>
+    <label class="topbar-btn upload" style="cursor:pointer">
+      📂 Trocar Excel
+      <input type="file" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+    </label>
+    <button class="topbar-btn" onclick="exportExcel()" title="Exportar para Excel .xlsx">⬇ Excel</button>
+    <button class="topbar-btn" onclick="exportCSV()" title="Exportar para CSV">⬇ CSV</button>
+    <button class="topbar-btn primary" onclick="openModal(null)">+ Nova Proposta</button>
+    <button class="topbar-btn" onclick="openProjectModal(null)" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35)">+ Novo Projeto</button>`;
+}
+
+function fmtDateShort(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+// Check cache on page load
+window.addEventListener('DOMContentLoaded',function(){
+  const meta=getCacheMeta();
+  if(meta){
+    const banner=document.getElementById('cache-banner');
+    const sub=document.getElementById('cache-banner-sub');
+    if(banner && sub){
+      const d=new Date(meta.date);
+      const dateStr=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      sub.textContent=`${meta.proposals} propostas · ${meta.projects} projetos · Atualizado em ${dateStr}`;
+      banner.style.display='block';
+    }
+  }
+});
+
+// Also auto-save whenever proposals change
+function saveProposal_orig(){} // overridden below
+
+// ── CRONOGRAMA (GANTT) ────────────────────────────────────────────────────────
+function renderCronograma() {
+  const el=document.getElementById('page-cronograma');
+  if(!PROJECTS.length){el.innerHTML=emptyState('Carregue um Excel com aba "Funil_Projetos" para ver o cronograma');return;}
+
+  let ganttFilter=window._ganttFilter||'Todos';
+  let ganttCoord=window._ganttCoord||'';
+  let ganttView=window._ganttView||'gantt'; // 'gantt' | 'capacidade'
+
+  const projects=PROJECTS.filter(p=>{
+    if(ganttFilter!=='Todos'&&p.status!==ganttFilter) return false;
+    if(ganttCoord&&p.coordination!==ganttCoord) return false;
+    return true;
+  });
+
+  function getBar(p){
+    let start=null,end=null;
+    if(p.signDate&&p.signDate.length>=7){
+      start=new Date(p.signDate.slice(0,7)+'-01');
+      if(p.contractMonths>0){
+        end=new Date(start.getFullYear(),start.getMonth()+Math.round(p.contractMonths),1);
+      }
+    }
+    return {start,end};
+  }
+
+  const today=new Date(); today.setDate(1);
+  let minDate=null,maxDate=null;
+  projects.forEach(p=>{
+    const {start,end}=getBar(p);
+    if(start){if(!minDate||start<minDate)minDate=new Date(start);}
+    if(end){if(!maxDate||end>maxDate)maxDate=new Date(end);}
+  });
+  if(!minDate)minDate=new Date(today.getFullYear()-1,0,1);
+  if(!maxDate)maxDate=new Date(today.getFullYear()+2,11,1);
+  minDate=new Date(minDate.getFullYear(),minDate.getMonth()-1,1);
+  maxDate=new Date(maxDate.getFullYear(),maxDate.getMonth()+2,1);
+
+  const months=[];
+  let cur=new Date(minDate);
+  while(cur<=maxDate){months.push(new Date(cur));cur.setMonth(cur.getMonth()+1);}
+  const totalMs=maxDate-minDate;
+  function pct(date){return date?Math.max(0,Math.min(100,(date-minDate)/totalMs*100)):null;}
+
+  const MO=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const statusOrder=['Execução','Inicialização','Contratação','Finalização','Encerrado','Cancelado'];
+  const sColor={'Execução':'#107c10','Inicialização':'#0078d4','Contratação':'#ff8c00','Finalização':'#8764b8','Encerrado':'#a19f9d','Cancelado':'#a80000'};
+  const rColor={'Verde':'#107c10','Amarelo':'#ffb900','Vermelho':'#a80000'};
+
+  const byCoord={};
+  projects.forEach(p=>{const c=p.coordination||'?';if(!byCoord[c])byCoord[c]=[];byCoord[c].push(p);});
+  Object.values(byCoord).forEach(arr=>arr.sort((a,b)=>statusOrder.indexOf(a.status)-statusOrder.indexOf(b.status)));
+
+  const todayPct=pct(today);
+  const ACTIVE=['Execução','Inicialização','Contratação','Finalização'];
+  const active=projects.filter(p=>ACTIVE.includes(p.status));
+  const totalBudget=active.reduce((s,p)=>s+p.budget,0);
+
+  // ── Capacity view: per-person, per next 3/6 months ──
+  function renderCapacidade(){
+    const horizons=[3,6,12];
+    const people=CIN_TEAM;
+    // For each person, count projects they are responsible for that are active at horizon
+    function activeAtMonth(person, monthsAhead){
+      const target=new Date(today.getFullYear(),today.getMonth()+monthsAhead,1);
+      return PROJECTS.filter(p=>{
+        if(!ACTIVE.includes(p.status)) return false;
+        const nameMatch=normalizeName(p.responsible)===person||normalizeName(p.leader)===person||normalizeName(p.analyst)===person;
+        if(!nameMatch) return false;
+        const {start,end}=getBar(p);
+        if(!start) return p.status!=='Encerrado'&&p.status!=='Cancelado';
+        if(end&&end<target) return false;
+        if(start>target) return false;
+        return true;
+      });
+    }
+
+    const rows=people.map(person=>{
+      const now_active=activeAtMonth(person,0);
+      const m3=activeAtMonth(person,3);
+      const m6=activeAtMonth(person,6);
+      const m12=activeAtMonth(person,12);
+      const max=Math.max(now_active.length,m3.length,m6.length,m12.length,1);
+      const load=n=>n>=5?'#a80000':n>=3?'#ff8c00':n===0?'#a19f9d':'#107c10';
+      return {person,now_active,m3,m6,m12,max,load};
+    });
+
+    const maxAll=Math.max(...rows.map(r=>Math.max(r.now_active.length,r.m3.length,r.m6.length,r.m12.length)),1);
+
+    return `<div class="card">
+      <div class="card-header"><div class="card-title">Vista de Capacidade — Projetos por Pessoa</div></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:160px repeat(4,1fr);gap:0;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:12px">
+          <div>Pessoa</div><div style="text-align:center">Hoje</div><div style="text-align:center">+3 meses</div><div style="text-align:center">+6 meses</div><div style="text-align:center">+12 meses</div>
+        </div>
+        ${rows.map(r=>`
+          <div style="display:grid;grid-template-columns:160px repeat(4,1fr);gap:0;align-items:center;margin-bottom:14px">
+            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.person.split(' ')[0]}</div>
+            ${[r.now_active,r.m3,r.m6,r.m12].map(arr=>`
+              <div style="padding:0 6px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                  <div style="font-size:18px;font-weight:800;color:${r.load(arr.length)};min-width:24px">${arr.length}</div>
+                  <div style="flex:1;height:8px;background:#f3f2f1;border-radius:4px;overflow:hidden">
+                    <div style="width:${arr.length/maxAll*100}%;height:100%;background:${r.load(arr.length)};border-radius:4px"></div>
+                  </div>
+                </div>
+                <div style="font-size:9px;color:var(--faint);line-height:1.3">${arr.slice(0,2).map(p=>esc(p.codename||p.client)).join(', ')}${arr.length>2?' +mais':''}</div>
+              </div>`).join('')}
+          </div>`).join('')}
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:16px;font-size:10px">
+          <span style="color:#107c10">🟢 0-2 projetos</span>
+          <span style="color:#ff8c00">🟡 3-4 projetos</span>
+          <span style="color:#a80000">🔴 5+ projetos</span>
+          <span style="color:var(--faint);margin-left:auto">Baseado em data_assinatura + vigencia_meses do Funil_Projetos</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+    ${[
+      {l:'Projetos exibidos',  v:projects.length,    c:'var(--blue)'},
+      {l:'Em execução/init',   v:active.length,       c:'#107c10'},
+      {l:'Orçamento ativo',    v:fmt(totalBudget),    c:'var(--green)'},
+      {l:'Período (meses)',    v:months.length+'m',   c:'var(--muted)'},
+    ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-accent" style="background:${k.c}"></div></div>`).join('')}
+  </div>
+
+  <!-- View toggle + filters -->
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+    <div style="display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+      <button onclick="window._ganttView='gantt';renderCronograma()" style="padding:5px 14px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:${ganttView==='gantt'?'#1e1a78':'#fff'};color:${ganttView==='gantt'?'#fff':'var(--text)'}">📅 Gantt</button>
+      <button onclick="window._ganttView='capacidade';renderCronograma()" style="padding:5px 14px;font-size:11px;font-weight:700;border:none;border-left:1px solid var(--border);cursor:pointer;background:${ganttView==='capacidade'?'#1e1a78':'#fff'};color:${ganttView==='capacidade'?'#fff':'var(--text)'}">👥 Capacidade</button>
+    </div>
+    <select class="filter-select" onchange="window._ganttFilter=this.value;renderCronograma()">
+      ${['Todos','Execução','Inicialização','Contratação','Finalização','Encerrado','Cancelado'].map(s=>`<option${ganttFilter===s?' selected':''}>${s}</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="window._ganttCoord=this.value;renderCronograma()">
+      <option value="">Todas as coordenações</option>
+      ${['CIT','CPQ','CBT','CIF'].map(c=>`<option${ganttCoord===c?' selected':''}>${c}</option>`).join('')}
+    </select>
+    ${ganttView==='gantt'?`<div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
+      ${Object.entries(sColor).map(([s,c])=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px"><span style="width:12px;height:12px;border-radius:2px;background:${c};display:inline-block;flex-shrink:0"></span>${s}</span>`).join('')}
+    </div>`:''}
+  </div>
+
+  ${ganttView==='capacidade' ? renderCapacidade() : `
+  <div class="gantt-wrap">
+    <div class="gantt-header">
+      <div class="gantt-label-col">Projeto / Cliente</div>
+      <div class="gantt-months">
+        ${months.map(m=>{
+          const isNow=m.getFullYear()===today.getFullYear()&&m.getMonth()===today.getMonth();
+          return `<div class="gantt-month${isNow?' today-col':''}">${MO[m.getMonth()]}<br><span style="font-size:8px;opacity:0.6">${m.getFullYear().toString().slice(2)}</span></div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    ${Object.entries(byCoord).sort((a,b)=>['CIT','CPQ','CBT','CIF'].indexOf(a[0])-['CIT','CPQ','CBT','CIF'].indexOf(b[0])).map(([coord,projs])=>`
+      <div class="gantt-row group-hdr">
+        <div class="gantt-info" style="border-right:3px solid ${CC[coord]||'#666'}">
+          <span style="font-size:10px;font-weight:800;color:${CC[coord]||'#666'};letter-spacing:0.5px">${coord} · ${projs.length} projetos · ${fmt(projs.reduce((s,p)=>s+p.budget,0))}</span>
+        </div>
+        <div class="gantt-timeline"></div>
+      </div>
+      ${projs.map(p=>{
+        const {start,end}=getBar(p);
+        const barL=start?pct(start):null;
+        const barR=end?pct(end):null;
+        const barW=(barL!==null&&barR!==null)?Math.max(0.5,barR-barL):null;
+        const baseColor=sColor[p.status]||'#888';
+        // Risk tints bar border
+        const riskBorder=p.risco?`box-shadow:0 0 0 2px ${rColor[p.risco]||'transparent'} inset`:'';
+        const lbl=barW&&barW>8?`${esc((p.codename||p.client||'').slice(0,22))} ${p.budget>0?'· '+fmt(p.budget):''}`:barW&&barW>3?esc((p.codename||'').slice(0,10)):'';
+        const riskIcon=p.risco?{Verde:'🟢',Amarelo:'🟡',Vermelho:'🔴'}[p.risco]||'':'';
+        return `<div class="gantt-row" title="${esc(p.client)} | ${esc(p.codename)} | ${p.status} | Risco: ${p.risco||'N/A'} | ${fmt(p.budget)} | Inicio: ${p.signDate||'?'} | ${p.contractMonths||'?'}m">
+          <div class="gantt-info">
+            <div style="overflow:hidden;width:100%">
+              <div style="display:flex;align-items:center;gap:4px">
+                ${riskIcon?`<span style="font-size:11px;flex-shrink:0">${riskIcon}</span>`:''}
+                <div class="gantt-info-name">${esc(p.codename||p.client)}</div>
+              </div>
+              <div class="gantt-info-sub">${esc(p.client)} · <span style="color:${baseColor};font-weight:700">${p.status}</span>${p.budget>0?' · '+fmt(p.budget):''}</div>
+            </div>
+          </div>
+          <div class="gantt-timeline">
+            ${todayPct!==null?`<div class="gantt-today-line" style="left:${todayPct}%"></div>`:''}
+            ${months.map((_,mi)=>`<div class="gantt-grid-line" style="left:${mi/months.length*100}%"></div>`).join('')}
+            ${barL!==null&&barW!==null&&barW>0?`<div class="gantt-bar" style="left:${barL}%;width:${barW}%;background:${baseColor};opacity:0.9;${riskBorder}">${lbl}</div>`
+              :(start?`<div style="position:absolute;left:${pct(start)}%;top:12px;font-size:10px;color:${baseColor};font-weight:700;z-index:2">▸</div>`:'')
+            }
+          </div>
+        </div>`;
+      }).join('')}
+    `).join('')}
+
+    ${projects.length===0?`<div style="padding:40px;text-align:center;color:var(--faint)">Nenhum projeto encontrado com os filtros atuais</div>`:''}
+  </div>
+  <p style="margin-top:8px;font-size:10px;color:var(--faint)">
+    💡 Passe o mouse sobre uma linha para detalhes. Barras requerem <strong>data_assinatura</strong> + <strong>vigencia_meses</strong>.
+    Ícone de risco (🟢🟡🔴) vem do campo <strong>risco</strong> no Funil_Projetos. A linha azul = hoje.
+  </p>`}`;
+}
+
+// ── INSTRUÇÕES ────────────────────────────────────────────────────────────────
+function renderInstrucoes() {
+  const el=document.getElementById('page-instrucoes');
+  el.innerHTML=`
+  <div class="instr-page">
+    <div class="instr-hero">
+      <h1>📊 Dashboard — Funil de Vendas &amp; Projetos</h1>
+      <p>Sistema de gestão de propostas e projetos — FIRJAN SENAI SESI, Inteligência Tecnológica.<br>
+      Acompanhe pipeline comercial, projetos em execução, cronograma e carga da equipe.</p>
+    </div>
+
+    <div class="instr-section">
+      <div class="instr-sec-hdr" onclick="toggleInstrSection(this)">
+        <span class="instr-sec-icon">📂</span><span class="instr-sec-title">Como carregar os dados</span><span class="instr-sec-chev">▼</span>
+      </div>
+      <div class="instr-body open">
+        ${[
+          ['1','Baixe o template Excel','Clique em <strong>⬇ Baixar Template Excel</strong> na tela inicial. Ele contém as abas <span class="itag">Funil_Vendas</span> <span class="itag g">Funil_Projetos</span> e Legenda com todos os valores aceitos.'],
+          ['2','Preencha o Excel','Insira os dados a partir da <strong>linha 2</strong> (linha 1 = cabeçalho). Veja a aba Legenda no template para os valores aceitos em cada campo.'],
+          ['3','Carregue no dashboard','Arraste o Excel para a tela inicial ou clique em <strong>📂 Carregar Excel</strong>. O dashboard atualiza e salva automaticamente no navegador.'],
+          ['4','Sessão salva','Os dados ficam salvos localmente. Na próxima vez que abrir, clique em <strong>"▶ Continuar última sessão"</strong> — sem precisar recarregar o arquivo.'],
+        ].map(([n,t,d])=>`<div class="instr-step"><div class="instr-num">${n}</div><div><div class="instr-step-title">${t}</div><div class="instr-step-desc">${d}</div></div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="instr-section">
+      <div class="instr-sec-hdr" onclick="toggleInstrSection(this)">
+        <span class="instr-sec-icon">🗂️</span><span class="instr-sec-title">O que cada aba mostra</span><span class="instr-sec-chev">▼</span>
+      </div>
+      <div class="instr-body open">
+        <table class="instr-tbl">
+          <thead><tr><th>Aba</th><th>Conteúdo</th><th>Fonte</th></tr></thead>
+          <tbody>
+            <tr><td><strong>📊 Visão Geral</strong></td><td>KPIs, status donut, orçamento por coordenação, propostas por tipo/mês, top contratos</td><td><span class="itag">Funil_Vendas</span></td></tr>
+            <tr><td><strong>🎯 Funil de Vendas</strong></td><td>Funil de conversão, kanban por etapa com logos das empresas</td><td><span class="itag">Funil_Vendas</span></td></tr>
+            <tr><td><strong>📋 Propostas</strong></td><td>Tabela completa com filtros, ordenação, edição e exclusão de cada linha</td><td><span class="itag">Funil_Vendas</span></td></tr>
+            <tr><td><strong>🏗️ Projetos</strong></td><td>KPIs de execução, breakdown por coordenação e tabela com todos os projetos</td><td><span class="itag g">Funil_Projetos</span></td></tr>
+            <tr><td><strong>📅 Cronograma</strong></td><td>Gráfico de Gantt agrupado por coordenação, com linha de hoje e filtros de status/coord.</td><td><span class="itag g">Funil_Projetos</span></td></tr>
+            <tr><td><strong>👥 Equipe</strong></td><td>Carga de trabalho por pessoa, projetos ativos + propostas no funil. Clique no card para ver detalhes.</td><td>Ambas + <span class="itag p">Equipe_CIT</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="instr-section">
+      <div class="instr-sec-hdr" onclick="toggleInstrSection(this)">
+        <span class="instr-sec-icon">📄</span><span class="instr-sec-title">Formato — Funil_Vendas (Propostas)</span><span class="instr-sec-chev">▶</span>
+      </div>
+      <div class="instr-body">
+        <table class="instr-tbl">
+          <thead><tr><th>Coluna</th><th>Obrig.</th><th>Valores / Formato</th></tr></thead>
+          <tbody>
+            <tr><td><code>coordenacao</code></td><td>✅</td><td><span class="itag">CIT</span><span class="itag">CPQ</span><span class="itag">CBT</span><span class="itag">CIF</span></td></tr>
+            <tr><td><code>responsavel</code></td><td>✅</td><td>Nome completo</td></tr>
+            <tr><td><code>ponto_focal</code></td><td>—</td><td>Nome do ponto focal</td></tr>
+            <tr><td><code>codinome</code></td><td>✅</td><td>Nome interno do projeto</td></tr>
+            <tr><td><code>cliente</code></td><td>✅</td><td>Nome da empresa cliente</td></tr>
+            <tr><td><code>tipo</code></td><td>✅</td><td><span class="itag">Projeto</span><span class="itag">Serviço</span><span class="itag">Com fomento</span><span class="itag">Sem fomento</span></td></tr>
+            <tr><td><code>status</code></td><td>✅</td><td><span class="itag">Previsto</span><span class="itag">Em elaboração</span><span class="itag">Enviado</span><span class="itag">Aceito</span><span class="itag o">Negociação</span><span class="itag g">Contratado</span><span class="itag r">Recusado</span></td></tr>
+            <tr><td><code>orcamento_total</code></td><td>✅</td><td>Número sem R$ nem pontos: <code>500000</code></td></tr>
+            <tr><td><code>orcamento_cin</code></td><td>—</td><td>Parcela CIT em R$</td></tr>
+            <tr><td><code>prazo_meses</code></td><td>—</td><td>Inteiro: <code>24</code></td></tr>
+            <tr><td><code>financiamento</code></td><td>—</td><td><span class="itag">Contratação direta</span> <span class="itag">EMBRAPII - CG</span> <span class="itag">ANP</span> <span class="itag">ANEEL</span> etc.</td></tr>
+            <tr><td><code>data_envio</code></td><td>—</td><td>Formato <code>AAAA-MM</code>: <code>2025-03</code></td></tr>
+            <tr><td><code>probabilidade</code></td><td>—</td><td><span class="itag">Baixo</span><span class="itag o">Médio</span><span class="itag g">Alto</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="instr-section">
+      <div class="instr-sec-hdr" onclick="toggleInstrSection(this)">
+        <span class="instr-sec-icon">🏗️</span><span class="instr-sec-title">Formato — Funil_Projetos (Execução)</span><span class="instr-sec-chev">▶</span>
+      </div>
+      <div class="instr-body">
+        <table class="instr-tbl">
+          <thead><tr><th>Coluna</th><th>Obrig.</th><th>Valores / Formato</th></tr></thead>
+          <tbody>
+            <tr><td><code>coordenacao</code></td><td>✅</td><td><span class="itag">CIT</span><span class="itag">CPQ</span><span class="itag">CBT</span><span class="itag">CIF</span></td></tr>
+            <tr><td><code>cliente</code></td><td>✅</td><td>Nome da empresa</td></tr>
+            <tr><td><code>codinome</code></td><td>✅</td><td>Nome interno do projeto</td></tr>
+            <tr><td><code>responsavel</code></td><td>✅</td><td>Nome do responsável na coordenação</td></tr>
+            <tr><td><code>status</code></td><td>✅</td><td><span class="itag">Inicialização</span><span class="itag">Contratação</span><span class="itag g">Execução</span><span class="itag p">Finalização</span><span class="itag">Encerrado</span><span class="itag r">Cancelado</span></td></tr>
+            <tr><td><code>orcamento</code></td><td>✅</td><td>Valor total em R$: <code>829687.15</code></td></tr>
+            <tr><td><code>data_assinatura</code></td><td>📅</td><td><code>AAAA-MM-DD</code>: <code>2024-01-15</code> — necessário para o Cronograma</td></tr>
+            <tr><td><code>vigencia_meses</code></td><td>📅</td><td>Duração em meses: <code>36</code> — necessário para o Cronograma</td></tr>
+            <tr><td><code>financiamento</code></td><td>—</td><td>Fonte de financiamento</td></tr>
+            <tr><td><code>receita_externa</code></td><td>—</td><td>Receita financeira externa em R$</td></tr>
+            <tr><td><code>risco</code></td><td>🚦</td><td><span class="itag g">Verde</span> <span class="itag o">Amarelo</span> <span class="itag r">Vermelho</span> — semáforo de risco, visível no Gantt e Projetos</td></tr>
+            <tr><td><code>nota_risco</code></td><td>—</td><td>Texto livre com justificativa ou observação do risco</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">📅 = necessário para exibição no Cronograma (Gantt) · 🚦 = semáforo de risco</p>
+      </div>
+    </div>
+
+    <div class="instr-section">
+      <div class="instr-sec-hdr" onclick="toggleInstrSection(this)">
+        <span class="instr-sec-icon">💡</span><span class="instr-sec-title">Dicas importantes</span><span class="instr-sec-chev">▶</span>
+      </div>
+      <div class="instr-body">
+        ${[
+          ['✅','#107c10','Cache automático','Dados salvos no navegador a cada upload ou edição. Na próxima abertura, clique "Continuar última sessão". O cache é por navegador — em outro computador será necessário recarregar o Excel.'],
+          ['✅','#107c10','Cronograma requer datas','Preencha <code>data_assinatura</code> e <code>vigencia_meses</code> no Funil_Projetos para que as barras apareçam no Gantt.'],
+          ['✅','#107c10','Nomes da equipe CIT','Adicione uma aba chamada <strong>Equipe_CIT</strong> no seu Excel com uma coluna <code>nome</code> listando os membros. A aba Equipe exibirá exatamente essas pessoas. Sem essa aba, o dashboard usa todos os responsáveis encontrados nos dados como fallback.'],
+          ['⚠️','#ff8c00','Filtros globais','Os filtros do topo (Coordenação, Status, Tipo, Ano) afetam as abas Visão Geral, Funil e Propostas. O Cronograma tem filtros próprios. A aba Equipe usa todos os dados sem filtro.'],
+        ].map(([icon,c,t,d])=>`<div class="instr-step"><div class="instr-num" style="background:${c}">${icon}</div><div><div class="instr-step-title">${t}</div><div class="instr-step-desc">${d}</div></div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="instr-section">
+      <div class="instr-sec-hdr" onclick="toggleInstrSection(this)">
+        <span class="instr-sec-icon">🆕</span><span class="instr-sec-title">Novas funcionalidades (v4.0)</span><span class="instr-sec-chev">▼</span>
+      </div>
+      <div class="instr-body open">
+        <table class="instr-tbl">
+          <thead><tr><th>Funcionalidade</th><th>Onde encontrar</th><th>Como usar</th></tr></thead>
+          <tbody>
+            <tr><td><strong>🎯 Meta Anual</strong></td><td>Barra de filtros (topo)</td><td>Digite o valor da meta em R$ no campo "Meta anual". Uma barra de progresso aparece no Visão Geral mostrando % atingido.</td></tr>
+            <tr><td><strong>📊 Pipeline Ponderado</strong></td><td>Visão Geral → KPIs</td><td>Pipeline ajustado por probabilidade: Alto×80%, Médio×50%, Baixo×20%. Mais realista que o pipeline bruto.</td></tr>
+            <tr><td><strong>⚠️ Alertas de proposta</strong></td><td>Visão Geral</td><td>Propostas enviadas há mais de 45 dias sem resposta aparecem automaticamente em destaque laranja.</td></tr>
+            <tr><td><strong>🚨 Projetos encerrando</strong></td><td>Projetos</td><td>Projetos que encerram em até 90 dias aparecem em destaque vermelho no topo da aba Projetos.</td></tr>
+            <tr><td><strong>🚦 Semáforo de risco</strong></td><td>Projetos + Cronograma</td><td>Preencha o campo <code>risco</code> no Excel com Verde/Amarelo/Vermelho. Aparece na tabela de projetos e como borda colorida nas barras do Gantt.</td></tr>
+            <tr><td><strong>👥 Capacidade futura</strong></td><td>Cronograma → botão "Capacidade"</td><td>Mostra quantos projetos cada pessoa terá hoje, em +3, +6 e +12 meses. Útil para planejamento de equipe.</td></tr>
+            <tr><td><strong>🗓️ Heatmap</strong></td><td>Visão Geral</td><td>Calendário de barras mostrando volume de propostas enviadas por semana no último ano.</td></tr>
+            <tr><td><strong>📈 Tendência de receita</strong></td><td>Visão Geral</td><td>Gráfico de barras da receita contratada por mês + indicador de tendência vs 6 meses anteriores.</td></tr>
+            <tr><td><strong>⬇ Exportar Excel</strong></td><td>Topbar → botão "Excel"</td><td>Exporta propostas, projetos e resumo KPIs em um arquivo .xlsx com abas separadas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:24px 0 8px;color:var(--faint);font-size:11px;border-top:1px solid var(--border);margin-top:12px">
+      FIRJAN SENAI SESI · Inteligência Tecnológica · Dashboard v4.0
+      <br><button onclick="clearCache();alert('Cache limpo!')" style="margin-top:8px;background:none;border:1px solid var(--border);border-radius:3px;padding:4px 12px;font-size:10px;cursor:pointer;color:var(--faint)">🗑 Limpar dados salvos</button>
+    </div>
+  </div>`;
+}
+
+function toggleInstrSection(hdr) {
+  const body=hdr.nextElementSibling;
+  const chev=hdr.querySelector('.instr-sec-chev');
+  body.classList.toggle('open');
+  chev.textContent=body.classList.contains('open')?'▼':'▶';
+}
+
+
+// ── EMPTY STATE ──────────────────────────────────────────────────────────────
+function emptyState(msg) {
+  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;color:var(--faint)">
+    <div style="font-size:48px">📂</div>
+    <div style="font-size:14px">${msg}</div>
+  </div>`;
+}
+</script>
+</body>
+</html>
